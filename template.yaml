@@ -1,0 +1,185 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: ""
+# Parameters:
+
+
+Resources:
+  OSPolicy:
+    Type: "AWS::IAM::Policy"
+    Properties:
+      PolicyName: "ospolicy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "aoss:APIAccessAll"
+              - "aoss:DashboardsAccessAll"
+              - "aoss:BatchGetCollection"
+            Resource: "*"
+
+  S3Policy:
+    Type: "AWS::IAM::Policy"
+    DependsOn: SQSQueue
+    Properties:
+      PolicyName: "s3policy"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Sid: "ReadFromS3"
+          Effect: "Allow"
+          Action: "s3:GetObject"
+          Resource:
+          - "arn:aws:s3:::sagemaker*"
+        - Sid: "ReceiveAndDeleteSqsMessages"
+          Effect: "Allow"
+          Action:
+          - "sqs:DeleteMessage"
+          - "sqs:ReceiveMessage"
+          - "sqs:ChangeMessageVisibility"
+          Resource: !GetAtt SQSQueue.Arn
+
+  SecurityPolicy: 
+    Type: "AWS::OpenSearchServerless::SecurityPolicy" 
+    Properties: 
+      Name: "encryptionpolicy"
+      Type: "encryption" 
+      Description: Encryption policy for test collections 
+      Policy: >-
+                {"Rules":[{"ResourceType":"collection","Resource":["collection/multimodaloscollection"]}],"AWSOwnedKey":true}
+
+  DataAccessAdminPolicy:
+    Type: "AWS::OpenSearchServerless::AccessPolicy"
+    Properties:
+      Name: "dataaccessadminpolicy"
+      Type: "data"
+      Policy: !Sub >-
+                [{"Description": "Data Admin access", "Rules": [{"ResourceType": "index", "Resource": ["index/*/*"], "Permission": ["aoss:*"]},
+                {"ResourceType": "collection", "Resource": ["collection/multimodaloscollection"], "Permission": ["aoss:*"]}],
+                "Principal": ["arn:aws:iam::${AWS::AccountId}:role/Admin"]}]
+
+  DataAccessPolicy:
+    Type: "AWS::OpenSearchServerless::AccessPolicy"
+    Properties:
+      Name: "dataaccesspolicy"
+      Type: "data"
+      Policy: !Sub >-
+          [{"Description": "Data access", "Rules": [{"ResourceType": "index", "Resource": ["index/*/*"], "Permission": ["aoss:*"]}],
+          "Principal": [!Ref SMExecutionRole !Ref OSPipelineExecutionRole]}]
+
+  SMExecutionRole: 
+    Type: "AWS::IAM::Role"
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - 
+            Effect: "Allow"
+            Principal: 
+              Service: 
+                - "sagemaker.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Path: "/"
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSageMakerFullAccess"
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonS3FullAccess"
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonOpenSearchServiceFullAccess"
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonBedrockFullAccess"
+
+  OSPipelineExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - 
+            Effect: "Allow"
+            Principal: 
+              Service: 
+                - "osis-pipelines.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Path: "/"
+      ManagedPolicyArns:
+      - !Ref OSPolicy
+      - !Ref S3Policy
+
+  SQSQueue: 
+    Type: AWS::SQS::Queue
+    Properties: 
+      QueueName: "InputfromS3"
+
+  MultimodalNotebookInstance:
+    Type: "AWS::SageMaker::NotebookInstance"
+    Properties:
+      InstanceType: "ml.t3.xlarge"
+      RoleArn: !GetAtt SMExecutionRole.Arn
+      DefaultCodeRepository: "https://github.com/aws-samples/multimodal-rag-on-slide-decks.git"
+
+  MultimodalCollection:
+    Type: "AWS::OpenSearchServerless::Collection"
+    Properties:
+      Name: "multimodaloscollection"
+      Type: "VECTORSEARCH"
+      Description: "Embeddings collection"
+    DependsOn: [SecurityPolicy, DataAccessAdminPolicy, DataAccessPolicy] #, NetworkPolicy]
+
+  MultimodalPipeline:
+      Type: 'AWS::OSIS::Pipeline'
+      Properties:
+        LogPublishingOptions:
+          IsLoggingEnabled: true
+          CloudWatchLogDestination:
+            LogGroup: /aws/vendedlogs/multimodalpipeline
+        MinUnits: 3
+        MaxUnits: 9
+        PipelineConfigurationBody: !Sub >- 
+          [version: "2"
+            s3-pipeline:
+              source:
+                s3:
+                  notification_type: "sqs"
+                  codec:
+                    json:
+                  sqs:
+                    queue_url: !Ref SQSQueueURL
+                  compression: "none"
+                  aws:
+                    region: {AWS::Region}
+                    # IAM role that the pipeline assumes to read data from the queue. This role must be the same as the pipeline role.
+                    sts_role_arn: !Ref OSPipelineExecutionRole
+              processor:
+              - grok:
+                  match:
+                    log:
+                    - "%{COMMONAPACHELOG}"
+              - date:
+                  destination: "@timestamp"
+                  from_time_received: true
+              sink:
+              - opensearch:
+                  hosts: [!Ref MultimodalCollectionEndpoint]
+                  index: "multimodal-slides-index"
+                  aws:
+                    serverless: true
+                    serverless_options:
+                        # network_policy_name: "serverless-network-policy"
+                    # IAM role that the pipeline assumes to access the domain sink
+                    sts_role_arn: !Ref OSPipelineExecutionRole
+                    region: {AWS::Region}]
+        PipelineName: multimodalpipeline
+Outputs:
+  MultimodalNotebookInstanceId:
+    Value: !Ref MultimodalNotebookInstance
+  SQSQueueARN: 
+    Description: "InputfromS3 SQS Queue ARN"
+    Value: 
+      !GetAtt SQSQueue.Arn
+  SQSQueueURL: 
+    Description: "InputfromS3 SQS Queue URL"
+    Value: 
+      !Ref SQSQueue
+  MultimodalCollectionEndpoint:
+    Value: 
+      !GetAtt MultimodalCollection.CollectionEndpoint

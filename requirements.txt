@@ -1,7 +1,7 @@
 huggingface-hub==0.19.4
 sagemaker==2.199.0
 pypdfium2==4.24.0
-httplib2==0.8
+httplib2==0.19.0
 langchain==0.0.340
 requests==2.31.0
 pandas==2.1.3
