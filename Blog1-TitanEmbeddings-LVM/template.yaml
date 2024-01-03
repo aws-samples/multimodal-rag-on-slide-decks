@@ -105,6 +105,7 @@ Resources:
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonS3FullAccess"
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonOpenSearchServiceFullAccess"
         - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonBedrockFullAccess"
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AWSCloudFormationReadOnlyAccess"
 
   OSPipelineExecutionRole:
     Type: "AWS::IAM::Role"
@@ -120,9 +121,6 @@ Resources:
             Action: 
               - "sts:AssumeRole"
       Path: "/"
-      # ManagedPolicyArns:
-      # - !Ref OSPolicy
-      # - !Ref S3Policy
 
   SQSQueue: 
     Type: AWS::SQS::Queue
@@ -142,7 +140,7 @@ Resources:
       Name: "multimodaloscollection"
       Type: "VECTORSEARCH"
       Description: "Embeddings collection"
-    DependsOn: [SecurityPolicy, DataAccessAdminPolicy, DataAccessPolicy] #, NetworkPolicy]
+    DependsOn: [SecurityPolicy, DataAccessAdminPolicy, DataAccessPolicy]
 
   MultimodalPipeline:
       Type: "AWS::OSIS::Pipeline"
@@ -151,8 +149,8 @@ Resources:
           IsLoggingEnabled: true
           CloudWatchLogDestination:
             LogGroup: "/aws/vendedlogs/multimodalpipeline"
-        MinUnits: 3
-        MaxUnits: 9
+        MinUnits: 1
+        MaxUnits: 2
         PipelineConfigurationBody: !Sub |
           version: "2"
           s3-pipeline:
@@ -166,7 +164,7 @@ Resources:
                 compression: "none"
                 aws:
                   region: ${AWS::Region}
-                  sts_role_arn: ${OSPipelineExecutionRole}
+                  sts_role_arn: ${OSPipelineExecutionRole.Arn}
             processor:
             - date:
                 destination: "@timestamp"
@@ -175,9 +173,46 @@ Resources:
             - opensearch:
                 hosts: [${MultimodalCollection.CollectionEndpoint}]
                 index: "multimodalslidesindex"
+                template_content: >
+                {
+                  settings: {
+                    index.knn: true
+                  },
+                  mappings: {
+                    properties: {
+                      vector_embedding: {
+                        type: "knn_vector",
+                        dimension: 1024,
+                        method: {
+                          name: "hnsw",
+                          engine: "nmslib",
+                          parameters: {}
+                        }
+                      },
+                      image_path: {
+                        type: "text"
+                        
+                      },
+                      metadata: { 
+                        properties :
+                          {
+                            slide_filename : {
+                              type : "text"
+                            },
+                            model_id : {
+                              type : "text"
+                            },
+                            slide_description:{
+                              type: "text"
+                            }
+                          }   
+                      }
+                    }
+                  }
+                }
                 aws:
                   serverless: true
-                  sts_role_arn: ${OSPipelineExecutionRole}
+                  sts_role_arn: ${OSPipelineExecutionRole.Arn}
                   region: ${AWS::Region}
         PipelineName: "multimodalpipeline"
 Outputs:
