@@ -44,10 +44,19 @@ Resources:
     Properties: 
       Name: "encryptionpolicy"
       Type: "encryption" 
-      Description: Encryption policy for test collections 
+      Description: Encryption policy for OS collections 
       Policy: >-
                 {"Rules":[{"ResourceType":"collection","Resource":["collection/multimodaloscollection"]}],"AWSOwnedKey":true}
 
+  NetworkPolicy: 
+    Type: "AWS::OpenSearchServerless::SecurityPolicy" 
+    Properties: 
+      Name: "networkpolicy"
+      Type: "network" 
+      Description: Network policy for OS collections
+      Policy: >-
+                [{"Rules":[{"ResourceType":"collection","Resource":["collection/multimodaloscollection"]}],"AllowFromPublic":true}]
+  
   DataAccessAdminPolicy:
     Type: "AWS::OpenSearchServerless::AccessPolicy"
     Properties:
@@ -131,8 +140,9 @@ Resources:
     Type: "AWS::SageMaker::NotebookInstance"
     Properties:
       InstanceType: "ml.t3.xlarge"
+      VolumeSizeInGB: 200
       RoleArn: !GetAtt SMExecutionRole.Arn
-      DefaultCodeRepository: "https://github.com/aarora79/multimodal.git"
+      # DefaultCodeRepository: "https://github.com/aarora79/multimodal.git"
 
   MultimodalCollection:
     Type: "AWS::OpenSearchServerless::Collection"
@@ -140,7 +150,12 @@ Resources:
       Name: "multimodaloscollection"
       Type: "VECTORSEARCH"
       Description: "Embeddings collection"
-    DependsOn: [SecurityPolicy, DataAccessAdminPolicy, DataAccessPolicy]
+    DependsOn: [SecurityPolicy, NetworkPolicy, DataAccessAdminPolicy, DataAccessPolicy]
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/vendedlogs/multimodalpipeline-${AWS::StackName}"
 
   MultimodalPipeline:
       Type: "AWS::OSIS::Pipeline"
@@ -148,7 +163,7 @@ Resources:
         LogPublishingOptions:
           IsLoggingEnabled: true
           CloudWatchLogDestination:
-            LogGroup: "/aws/vendedlogs/multimodalpipeline"
+            LogGroup: !Ref LogGroup
         MinUnits: 1
         MaxUnits: 2
         PipelineConfigurationBody: !Sub |
@@ -170,50 +185,49 @@ Resources:
                 destination: "@timestamp"
                 from_time_received: true
             sink:
-            - opensearch:
-                hosts: [${MultimodalCollection.CollectionEndpoint}]
-                index: "multimodalslidesindex"
-                template_content: >
-                {
-                  settings: {
-                    index.knn: true
-                  },
-                  mappings: {
-                    properties: {
-                      vector_embedding: {
-                        type: "knn_vector",
-                        dimension: 1024,
-                        method: {
-                          name: "hnsw",
-                          engine: "nmslib",
-                          parameters: {}
-                        }
-                      },
-                      image_path: {
-                        type: "text"
-                        
-                      },
-                      metadata: { 
-                        properties :
-                          {
-                            slide_filename : {
-                              type : "text"
+              - opensearch:
+                  hosts: [${MultimodalCollection.CollectionEndpoint}]
+                  index: "multimodalslidesindex"
+                  template_content: >
+                    {
+                      "template" : {
+                        "mappings" : {
+                          "properties" : {
+                            "vector_embedding": {
+                              "type" : "knn_vector",
+                              "dimension": "1024",
+                              "method": {
+                                "name": "hnsw",
+                                "engine": "nmslib",
+                                "parameters": {}
+                              }
                             },
-                            model_id : {
-                              type : "text"
+                            "image_path": {
+                              "type": "text"
                             },
-                            slide_description:{
-                              type: "text"
+                            "metadata": {
+                              "properties": {
+                                  "slide_filename": {
+                                    "type": "text"
+                                  },
+                                  "model_id": {
+                                    "type": "text"
+                                  },
+                                  "slide_description": {
+                                    "type": "text"
+                                  }
+                              }
                             }
-                          }   
+                          }
+                        }
                       }
                     }
-                  }
-                }
-                aws:
-                  serverless: true
-                  sts_role_arn: ${OSPipelineExecutionRole.Arn}
-                  region: ${AWS::Region}
+                  aws:
+                    serverless: true
+                    serverless_options:
+                      network_policy_name: ${NetworkPolicy}
+                    sts_role_arn: ${OSPipelineExecutionRole.Arn}
+                    region: ${AWS::Region}
         PipelineName: "multimodalpipeline"
 Outputs:
   MultimodalNotebookInstanceId:
