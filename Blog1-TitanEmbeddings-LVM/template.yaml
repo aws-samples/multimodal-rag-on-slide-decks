@@ -1,5 +1,33 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: "This CloudFormation template creates resources required for 'talk-to-your-slide-deck' approach1"
+Description: "This CloudFormation template creates resources required for 'talk-to-your-slide-deck' using Titan multimodal embeddings"
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Required Parameters
+        Parameters:
+          - OSCollectionName          
+          - OSIndexName
+    ParameterLabels:      
+      OSCollectionName:
+        default: OpenSearch vector index name
+      OSIndexName:
+        default: OpenSearch collection name
+
+Parameters:
+  OSCollectionName:
+    Default: multimodaloscollection
+    Type: String
+    Description: Name of the Amazon OpenSearch Service Serverless (AOSS) collection
+    MinLength: 1
+    MaxLength: 63
+    AllowedPattern: ^[a-z0-9](-*[a-z0-9])*
+    ConstraintDescription: Must be lowercase or numbers with a length of 1-63 characters
+  OSIndexName:
+    Default: multimodalslidesindex
+    Type: String
+    Description: Name of the vector index in the Amazon OpenSearch Service Serverless (AOSS) collection
 
 Resources:
   OSPolicy:
@@ -45,8 +73,8 @@ Resources:
       Name: "encryptionpolicy"
       Type: "encryption" 
       Description: Encryption policy for OS collections 
-      Policy: >-
-                {"Rules":[{"ResourceType":"collection","Resource":["collection/multimodaloscollection"]}],"AWSOwnedKey":true}
+      Policy: !Sub >-
+                {"Rules":[{"ResourceType":"collection","Resource":["collection/${OSCollectionName}"]}],"AWSOwnedKey":true}
 
   NetworkPolicy: 
     Type: "AWS::OpenSearchServerless::SecurityPolicy" 
@@ -54,8 +82,14 @@ Resources:
       Name: "networkpolicy"
       Type: "network" 
       Description: Network policy for OS collections
+<<<<<<< HEAD
       Policy: >-
                 [{"Rules":[{"ResourceType":"collection","Resource":["collection/multimodaloscollection"]},{"ResourceType":"dashboard","Resource":["collection/multimodaloscollection"]}],"AllowFromPublic":true}]
+=======
+      Policy: !Sub >-
+                [{"Rules":[{"ResourceType":"collection","Resource":["collection/${OSCollectionName}"]},
+                {"ResourceType":"dashboard","Resource":["collection/${OSCollectionName}"]}],"AllowFromPublic":true}]
+>>>>>>> d756ab2 (parameters)
   
   DataAccessAdminPolicy:
     Type: "AWS::OpenSearchServerless::AccessPolicy"
@@ -64,7 +98,7 @@ Resources:
       Type: "data"
       Policy: !Sub >-
                 [{"Description": "Data Admin access", "Rules": [{"ResourceType": "index", "Resource": ["index/*/*"], "Permission": ["aoss:*"]},
-                {"ResourceType": "collection", "Resource": ["collection/multimodaloscollection"], "Permission": ["aoss:*"]}],
+                {"ResourceType": "collection", "Resource": ["collection/${OSCollectionName}"], "Permission": ["aoss:*"]}],
                 "Principal": ["arn:aws:iam::${AWS::AccountId}:role/Admin"]}]
 
   DataAccessPolicy:
@@ -156,7 +190,7 @@ Resources:
   MultimodalCollection:
     Type: "AWS::OpenSearchServerless::Collection"
     Properties:
-      Name: "multimodaloscollection"
+      Name: !Ref OSCollectionName
       Type: "VECTORSEARCH"
       Description: "Embeddings collection"
     DependsOn: [SecurityPolicy, NetworkPolicy, DataAccessAdminPolicy, DataAccessPolicy]
@@ -196,7 +230,7 @@ Resources:
             sink:
               - opensearch:
                   hosts: [${MultimodalCollection.CollectionEndpoint}]
-                  index: "multimodalslidesindex"
+                  index: ${OSIndexName}
                   template_content: >
                     {
                       "template" : {
@@ -252,3 +286,6 @@ Outputs:
   MultimodalCollectionEndpoint:
     Value: 
       !GetAtt MultimodalCollection.CollectionEndpoint
+  OpenSearchIndexName:
+    Description: "OpenSearch Vector Index"
+    Value: !Ref OSIndexName
