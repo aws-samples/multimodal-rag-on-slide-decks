@@ -27,5 +27,5 @@ FMC_MODEL_ID = "amazon.titan-embed-image-v1"
 ACCEPT_ENCODING = "application/json"
 CONTENT_ENCODING = "application/json"
 
-S3_MODEL_URI=os.path.join("s3://", BUCKET_NAME, BUCKET_PREFIX, os.path.basename(HF_MODEL_ID), HF_MODEL_NAME)
+S3_MODEL_URI=os.path.join("s3://", BUCKET_NAME, BUCKET_PREFIX, os.path.basename(HF_MODEL_ID))
 SLIDE_DECK = "https://d1.awsstatic.com/events/Summits/torsummit2023/CMP301_TrainDeploy_E1_20230607_SPEdited.pdf"
