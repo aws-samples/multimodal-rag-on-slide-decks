@@ -4,7 +4,7 @@ Description: "This CloudFormation template creates resources required for 'talk-
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
-      - Label:
+      - Label: 
           default: Required Parameters
         Parameters:
           - OSCollectionName          
@@ -231,40 +231,6 @@ Resources:
               - opensearch:
                   hosts: [${MultimodalCollection.CollectionEndpoint}]
                   index: ${OSIndexName}
-                  template_content: >
-                    {
-                      "template" : {
-                        "mappings" : {
-                          "properties" : {
-                            "vector_embedding": {
-                              "type" : "knn_vector",
-                              "dimension": "1024",
-                              "method": {
-                                "name": "hnsw",
-                                "engine": "nmslib",
-                                "parameters": {}
-                              }
-                            },
-                            "image_path": {
-                              "type": "text"
-                            },
-                            "metadata": {
-                              "properties": {
-                                  "slide_filename": {
-                                    "type": "text"
-                                  },
-                                  "model_id": {
-                                    "type": "text"
-                                  },
-                                  "slide_description": {
-                                    "type": "text"
-                                  }
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
                   aws:
                     serverless: true
                     serverless_options:
