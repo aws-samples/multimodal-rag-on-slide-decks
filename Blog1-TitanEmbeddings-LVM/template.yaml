@@ -98,6 +98,15 @@ Resources:
   SMExecutionRole: 
     Type: "AWS::IAM::Role"
     Properties: 
+      Policies:
+        - PolicyName: AOSSAPIAccessAll
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - aoss:APIAccessAll
+                Resource: !Sub "arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:collection/*"
       AssumeRolePolicyDocument: 
         Version: "2012-10-17"
         Statement: 
