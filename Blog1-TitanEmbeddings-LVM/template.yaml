@@ -82,14 +82,9 @@ Resources:
       Name: "networkpolicy"
       Type: "network" 
       Description: Network policy for OS collections
-<<<<<<< HEAD
       Policy: >-
-                [{"Rules":[{"ResourceType":"collection","Resource":["collection/multimodaloscollection"]},{"ResourceType":"dashboard","Resource":["collection/multimodaloscollection"]}],"AllowFromPublic":true}]
-=======
-      Policy: !Sub >-
-                [{"Rules":[{"ResourceType":"collection","Resource":["collection/${OSCollectionName}"]},
-                {"ResourceType":"dashboard","Resource":["collection/${OSCollectionName}"]}],"AllowFromPublic":true}]
->>>>>>> d756ab2 (parameters)
+                [{"Rules":[{"ResourceType":"collection","Resource":["collection/multimodaloscollection"]},
+                {"ResourceType":"dashboard","Resource":["collection/multimodaloscollection"]}],"AllowFromPublic":true}]
   
   DataAccessAdminPolicy:
     Type: "AWS::OpenSearchServerless::AccessPolicy"
