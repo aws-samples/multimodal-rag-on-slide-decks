@@ -55,7 +55,7 @@ Resources:
       Type: "network" 
       Description: Network policy for OS collections
       Policy: >-
-                [{"Rules":[{"ResourceType":"collection","Resource":["collection/multimodaloscollection"]}],"AllowFromPublic":true}]
+                [{"Rules":[{"ResourceType":"collection","Resource":["collection/multimodaloscollection"]},{"ResourceType":"dashboard","Resource":["collection/multimodaloscollection"]}],"AllowFromPublic":true}]
   
   DataAccessAdminPolicy:
     Type: "AWS::OpenSearchServerless::AccessPolicy"
