@@ -1,5 +1,5 @@
 """
-Utility functions for S3 and CloudFormation uised by the rest of the code
+Utility functions for S3 and CloudFormation used by the rest of the code
 """
 import os
 import boto3
