@@ -17,7 +17,7 @@ Metadata:
 
 Parameters:
   OSCollectionName:
-    Default: multimodaloscollection
+    Default: multimodal
     Type: String
     Description: Name of the Amazon OpenSearch Service Serverless (AOSS) collection
     MinLength: 1
@@ -25,7 +25,7 @@ Parameters:
     AllowedPattern: ^[a-z0-9](-*[a-z0-9])*
     ConstraintDescription: Must be lowercase or numbers with a length of 1-63 characters
   OSIndexName:
-    Default: multimodalslidesindex
+    Default: slides
     Type: String
     Description: Name of the vector index in the Amazon OpenSearch Service Serverless (AOSS) collection
 
@@ -82,7 +82,7 @@ Resources:
       Name: "networkpolicy"
       Type: "network" 
       Description: Network policy for OS collections
-      Policy: >-
+      Policy: !Sub >-
                 [{"Rules":[{"ResourceType":"collection","Resource":["collection/${OSCollectionName}"]},
                 {"ResourceType":"dashboard","Resource":["collection/${OSCollectionName}"]}],"AllowFromPublic":true}]
   
@@ -196,43 +196,44 @@ Resources:
       LogGroupName: !Sub "/aws/vendedlogs/multimodalpipeline-${AWS::StackName}"
 
   MultimodalPipeline:
-      Type: "AWS::OSIS::Pipeline"
-      Properties:
-        LogPublishingOptions:
-          IsLoggingEnabled: true
-          CloudWatchLogDestination:
-            LogGroup: !Ref LogGroup
-        MinUnits: 1
-        MaxUnits: 2
-        PipelineConfigurationBody: !Sub |
-          version: "2"
-          s3-pipeline:
-            source:
-              s3:
-                notification_type: "sqs"
-                codec:
-                  json:
-                sqs:
-                  queue_url: ${SQSQueue}
-                compression: "none"
+    Type: "AWS::OSIS::Pipeline"
+    Properties:
+      LogPublishingOptions:
+        IsLoggingEnabled: true
+        CloudWatchLogDestination:
+          LogGroup: !Ref LogGroup
+      MinUnits: 1
+      MaxUnits: 2
+      PipelineConfigurationBody: !Sub |
+        version: "2"
+        s3-pipeline:
+          source:
+            s3:
+              notification_type: "sqs"
+              codec:
+                json:
+              sqs:
+                queue_url: ${SQSQueue}
+              compression: "none"
+              aws:
+                region: ${AWS::Region}
+                sts_role_arn: ${OSPipelineExecutionRole.Arn}
+          processor:
+          - date:
+              destination: "@timestamp"
+              from_time_received: true
+          sink:
+            - opensearch:
+                hosts: [${MultimodalCollection.CollectionEndpoint}]
+                index: ${OSIndexName}
                 aws:
-                  region: ${AWS::Region}
+                  serverless: true
+                  serverless_options:
+                    network_policy_name: ${NetworkPolicy.Name}
                   sts_role_arn: ${OSPipelineExecutionRole.Arn}
-            processor:
-            - date:
-                destination: "@timestamp"
-                from_time_received: true
-            sink:
-              - opensearch:
-                  hosts: [${MultimodalCollection.CollectionEndpoint}]
-                  index: ${OSIndexName}
-                  aws:
-                    serverless: true
-                    serverless_options:
-                      network_policy_name: ${NetworkPolicy}
-                    sts_role_arn: ${OSPipelineExecutionRole.Arn}
-                    region: ${AWS::Region}
-        PipelineName: "multimodalpipeline"
+                  region: ${AWS::Region}
+      PipelineName: "multimodalpipeline"
+
 Outputs:
   MultimodalNotebookInstanceId:
     Value: !Ref MultimodalNotebookInstance
