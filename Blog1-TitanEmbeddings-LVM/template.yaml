@@ -229,7 +229,7 @@ Resources:
                 aws:
                   serverless: true
                   serverless_options:
-                    network_policy_name: ${NetworkPolicy.Name}
+                    network_policy_name: !Ref NetworkPolicy
                   sts_role_arn: ${OSPipelineExecutionRole.Arn}
                   region: ${AWS::Region}
       PipelineName: "multimodalpipeline"
