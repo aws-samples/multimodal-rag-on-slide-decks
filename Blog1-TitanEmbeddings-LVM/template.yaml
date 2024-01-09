@@ -9,11 +9,17 @@ Metadata:
         Parameters:
           - OSCollectionName          
           - OSIndexName
+          - BucketName
+          - QueueName
     ParameterLabels:      
       OSCollectionName:
         default: OpenSearch vector index name
       OSIndexName:
         default: OpenSearch collection name
+      BucketName:
+        default: Bucket used to store data
+      QueueName:
+        default: SQS Queue
 
 Parameters:
   OSCollectionName:
@@ -28,6 +34,14 @@ Parameters:
     Default: slides
     Type: String
     Description: Name of the vector index in the Amazon OpenSearch Service Serverless (AOSS) collection
+  BucketName:
+    Default: "multimodal-bucket"
+    Type: String
+    Description: S3 Bucket name
+  QueueName:
+    Default: "multimodal-queue"
+    Type: String
+    Description: SQS Queue name
 
 Resources:
   OSPolicy:
@@ -57,7 +71,7 @@ Resources:
           Effect: "Allow"
           Action: "s3:GetObject"
           Resource:
-          - "arn:aws:s3:::sagemaker*"
+          - !Join [ "", ["arn:aws:s3:::", !Ref BucketName, "*" ] ]
         - Sid: "ReceiveAndDeleteSqsMessages"
           Effect: "Allow"
           Action:
@@ -70,7 +84,7 @@ Resources:
   SecurityPolicy: 
     Type: "AWS::OpenSearchServerless::SecurityPolicy" 
     Properties: 
-      Name: "encryptionpolicy"
+      Name: "multimodal-security-policy"
       Type: "encryption" 
       Description: Encryption policy for OS collections 
       Policy: !Sub >-
@@ -79,7 +93,7 @@ Resources:
   NetworkPolicy: 
     Type: "AWS::OpenSearchServerless::SecurityPolicy" 
     Properties: 
-      Name: "networkpolicy"
+      Name: "multimodal-network-policy"
       Type: "network" 
       Description: Network policy for OS collections
       Policy: !Sub >-
@@ -89,7 +103,7 @@ Resources:
   DataAccessAdminPolicy:
     Type: "AWS::OpenSearchServerless::AccessPolicy"
     Properties:
-      Name: "dataaccessadminpolicy"
+      Name: "multimodal-adminpolicy"
       Type: "data"
       Policy: !Sub >-
                 [{"Description": "Data Admin access", "Rules": [{"ResourceType": "index", "Resource": ["index/*/*"], "Permission": ["aoss:*"]},
@@ -99,7 +113,7 @@ Resources:
   DataAccessPolicy:
     Type: "AWS::OpenSearchServerless::AccessPolicy"
     Properties:
-      Name: "dataaccesspolicy"
+      Name: "multimodal-da-policy"
       Type: "data"
       Policy: !Sub >-
           [{"Description": "Data access", "Rules": [{"ResourceType": "index", "Resource": ["index/*/*"], "Permission": ["aoss:*"]}],
@@ -122,7 +136,7 @@ Resources:
               StringEquals:
                 aws:SourceAccount: !Sub ${AWS::AccountId}
               ArnLike:
-                aws:SourceArn: !Sub "arn:aws:s3:*:*:sagemaker-${AWS::Region}-${AWS::AccountId}"
+                aws:SourceArn: !Join [ "", ["arn:aws:s3:*:*:", !Join [ "-", [ !Ref BucketName, !Ref "AWS::AccountId" ] ] ] ]
 
   SMExecutionRole: 
     Type: "AWS::IAM::Role"
@@ -168,11 +182,58 @@ Resources:
             Action: 
               - "sts:AssumeRole"
       Path: "/"
+  
+  LambdaBasicExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: S3Access
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:*
+                Resource: '*'
+        - PolicyName: AWSLambdaBasicExecutionRole
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
 
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    DependsOn: [SQSQueue, SQSQueuePolicy]
+    Properties:
+      BucketName: !Join [ "-", [ !Ref BucketName, !Ref "AWS::AccountId" ] ]
+      NotificationConfiguration:
+        QueueConfigurations:
+          - Event: "s3:ObjectCreated:*"
+            Queue: !GetAtt SQSQueue.Arn
+            Filter:
+              S3Key:
+                Rules:
+                  - Name: prefix
+                    Value: multimodal/osi-embeddings-json
+  
   SQSQueue: 
     Type: AWS::SQS::Queue
     Properties: 
-      QueueName: "InputfromS3"
+      QueueName: !Join [ "-", [ !Ref QueueName, !Ref "AWS::AccountId" ] ]
+      ReceiveMessageWaitTimeSeconds: 0
+      VisibilityTimeout: 90
 
   MultimodalNotebookInstance:
     Type: "AWS::SageMaker::NotebookInstance"
@@ -234,7 +295,57 @@ Resources:
                   region: ${AWS::Region}
       PipelineName: "multimodalpipeline"
 
+  cleanupBucketOnDelete:
+    Type: Custom::cleanupbucket
+    Properties:
+      ServiceToken: !GetAtt 'DeleteS3Bucket.Arn'
+      BucketName: !Ref S3Bucket
+    DependsOn: S3Bucket
+
+  DeleteS3Bucket:
+    Type: AWS::Lambda::Function
+    Properties:
+      Handler: index.lambda_handler
+      FunctionName: 'multimodal_deletes3_contents'
+      Description: "Delete all objects in S3 bucket"
+      Timeout: 30
+      Role: !GetAtt 'LambdaBasicExecutionRole.Arn'
+      Runtime: python3.9
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref S3Bucket
+      Code:
+        ZipFile: |
+          import json, boto3, logging
+          import cfnresponse
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+
+          def lambda_handler(event, context):
+              logger.info("event: {}".format(event))
+              try:
+                  bucket = event['ResourceProperties']['BucketName']
+                  logger.info("bucket: {}, event['RequestType']: {}".format(bucket,event['RequestType']))
+                  if event['RequestType'] == 'Delete':
+                      s3 = boto3.resource('s3')
+                      bucket = s3.Bucket(bucket)
+                      for obj in bucket.objects.filter():
+                          logger.info("delete obj: {}".format(obj))
+                          s3.Object(bucket.name, obj.key).delete()
+
+                  sendResponseCfn(event, context, cfnresponse.SUCCESS)
+              except Exception as e:
+                  logger.info("Exception: {}".format(e))
+                  sendResponseCfn(event, context, cfnresponse.FAILED)
+
+          def sendResponseCfn(event, context, responseStatus):
+              responseData = {}
+              responseData['Data'] = {}
+              cfnresponse.send(event, context, responseStatus, responseData, "CustomResourcePhysicalID")            
+
 Outputs:
+  BucketName:
+    Value: !Ref S3Bucket
   MultimodalNotebookInstanceId:
     Value: !Ref MultimodalNotebookInstance
   SQSQueueARN: 
