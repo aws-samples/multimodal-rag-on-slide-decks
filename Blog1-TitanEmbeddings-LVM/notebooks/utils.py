@@ -44,3 +44,8 @@ def get_cfn_outputs(stackname: str) -> List:
     for output in stacks[0]['Outputs']:
         outputs[output['OutputKey']] = output['OutputValue']
     return outputs
+
+def get_bucket_name(stackname: str) -> str:
+    outputs = get_cfn_outputs(stackname)
+    bucketname = outputs['BucketName']
+    return bucketname

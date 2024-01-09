@@ -15,7 +15,7 @@ PYTORCH_VERSION: str = "2.0.0"
 PYTHON_VERSION: str = "py310"
 
 # S3 bucket strucutre, we use the default sagemaker bucket in the current region
-BUCKET_NAME: str = sagemaker.Session().default_bucket()
+# BUCKET_NAME: str = sagemaker.Session().default_bucket()
 BUCKET_PREFIX: str = "multimodal"
 BUCKET_EMB_PREFIX: str = f"{BUCKET_PREFIX}/osi-embeddings-json"
 BUCKET_IMG_PREFIX: str = f"{BUCKET_PREFIX}/img"
@@ -28,7 +28,7 @@ ACCEPT_ENCODING: str = "application/json"
 CONTENT_ENCODING: str = "application/json"
 
 # model.tar.gz path in S3
-S3_MODEL_URI: str = os.path.join("s3://", BUCKET_NAME, BUCKET_PREFIX, os.path.basename(HF_MODEL_ID))
+# S3_MODEL_URI: str = os.path.join("s3://", BUCKET_NAME, BUCKET_PREFIX, os.path.basename(HF_MODEL_ID))
 
 # Amazon OpenSearch Service Serverless
 OS_SERVICE: str = "aoss"

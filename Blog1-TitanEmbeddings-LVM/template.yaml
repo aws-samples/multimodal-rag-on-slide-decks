@@ -241,7 +241,7 @@ Resources:
       InstanceType: "ml.t3.xlarge"
       VolumeSizeInGB: 200
       RoleArn: !GetAtt SMExecutionRole.Arn
-      # DefaultCodeRepository: "https://github.com/aarora79/multimodal.git"
+      DefaultCodeRepository: "https://github.com/aws-samples/multimodal-rag-on-slide-decks.git"
 
   MultimodalCollection:
     Type: "AWS::OpenSearchServerless::Collection"
