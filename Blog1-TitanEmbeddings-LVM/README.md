@@ -18,7 +18,7 @@ The solution design consists of two parts - Ingestion and User interaction.  Dur
 
 
 ### Ingestion steps:
-![](./images/ML-16123-ingestion-design.jpg)
+![](./images/ML-16123-ingestion-design)
 
 1. Slides are converted to JPG (one per slide) and passed to the Titan Multimodal Embeddings model to generate embeddings. In our blog, we use this [sample](https://d1.awsstatic.com/events/Summits/torsummit2023/CMP301_TrainDeploy_E1_20230607_SPEdited.pdf) deck to demonstrate the solution. The sample deck has 31 slides, therefore the output generated has 31 sets of vector embeddings, each with 1024 dimensions. We add additional metadata fields to these generated vector embeddings and create a JSON file. These additional metadata fields can be used to perform rich search queries using OpenSearch’s powerful search capabilities. 
 2. The generated JSON file is uploaded to Amazon S3
@@ -27,7 +27,7 @@ The solution design consists of two parts - Ingestion and User interaction.  Dur
 5. An OpenSearch index is configured as the sink for this pipeline. JSON files ingested via the pipeline are stored in this vector index. Note that the index is created as part of a OpenSearch Serverless collection.
 
 ### User interaction steps:
-![](./images/ML-16123-UserInteraction-design.jpg)
+![](./images/ML-16123-user-interaction-design.jpg)
 
 1. User submits a question/prompt related to the slide deck that has been ingested
 2. User input is converted into embeddings by the Titan Multimodal Embeddings model. An OpenSearch vector search is performed using these embeddings. We perform a K-Nearest Neighbor (k=1) search to retrieve the most relevant embedding matching the user query. Therefore the output of this step is a slide 
