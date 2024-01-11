@@ -18,7 +18,7 @@ The solution design consists of two parts - Ingestion and User interaction.  Dur
 
 
 ### Ingestion steps:
-![](./images/ML-16123-ingestion-design)
+![](./images/ML-16123-ingestion-design.jpg)
 
 1. Slides are converted to JPG (one per slide) and passed to the Titan Multimodal Embeddings model to generate embeddings. In our blog, we use this [sample](https://d1.awsstatic.com/events/Summits/torsummit2023/CMP301_TrainDeploy_E1_20230607_SPEdited.pdf) deck to demonstrate the solution. The sample deck has 31 slides, therefore the output generated has 31 sets of vector embeddings, each with 1024 dimensions. We add additional metadata fields to these generated vector embeddings and create a JSON file. These additional metadata fields can be used to perform rich search queries using OpenSearch’s powerful search capabilities. 
 2. The generated JSON file is uploaded to Amazon S3
