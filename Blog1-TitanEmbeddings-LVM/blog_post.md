@@ -90,8 +90,8 @@ repo.
 ### Ingestion steps:
 
 <figure>
-<img src="img/ML-16123-ingestion-design.jpg" id="fig-ingestion-design"
-alt="Figure 1: Ingestion architecture" />
+<img src="images/ML-16123-ingestion-design.jpg"
+id="fig-ingestion-design" alt="Figure 1: Ingestion architecture" />
 <figcaption aria-hidden="true">Figure 1: Ingestion
 architecture</figcaption>
 </figure>
@@ -128,7 +128,7 @@ architecture</figcaption>
 ### User interaction steps:
 
 <figure>
-<img src="img/ML-16123-user-interaction-design.jpg"
+<img src="images/ML-16123-user-interaction-design.jpg"
 id="fig-ingestion-design"
 alt="Figure 2: User interaction architecture" />
 <figcaption aria-hidden="true">Figure 2: User interaction
@@ -168,7 +168,7 @@ Embeddings is enabled, the Access status will state “Access granted” as
 below.
 
 <figure>
-<img src="img/ML-16123-request-model-access.png"
+<img src="images/ML-16123-request-model-access.png"
 id="fig-request-model-access"
 alt="Figure 3: User interaction architecture" />
 <figcaption aria-hidden="true">Figure 3: User interaction
@@ -181,7 +181,7 @@ clicking on Request model access. The model is enabled for use
 immediately.
 
 <figure>
-<img src="img/ML-16123-request-model-access-2.png"
+<img src="images/ML-16123-request-model-access-2.png"
 id="fig-request-model-access-2"
 alt="Figure 4: User interaction architecture" />
 <figcaption aria-hidden="true">Figure 4: User interaction
@@ -190,18 +190,18 @@ architecture</figcaption>
 
 ## Use AWS CloudFormation template to create the solution stack
 
-| AWS Region |                                                                                                                                   Link                                                                                                                                   |
-|:----------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| us-east-1  | [<img src="./img/ML-16123-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=multimodal-stack&templateURL=https://aws-blogs-artifacts-public.s3.amazonaws.com/artifacts/ML-16123/template.yml) |
-| us-west-2  | [<img src="./img/ML-16123-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=multimodal-stack&templateURL=https://aws-blogs-artifacts-public.s3.amazonaws.com/artifacts/ML-16123/template.yml) |
+| AWS Region |                                                                                                                                    Link                                                                                                                                     |
+|:----------:|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| us-east-1  | [<img src="./images/ML-16123-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=multimodal-stack&templateURL=https://aws-blogs-artifacts-public.s3.amazonaws.com/artifacts/ML-16123/template.yml) |
+| us-west-2  | [<img src="./images/ML-16123-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=multimodal-stack&templateURL=https://aws-blogs-artifacts-public.s3.amazonaws.com/artifacts/ML-16123/template.yml) |
 
 After the stack is created successfully, navigate to the stack’s
 `Outputs` tab on the AWS CloudFormation console and note the values for
 `MultimodalCollectionEndpoint`, we will use it in the subsequent steps.
 
 <figure>
-<img src="img/ML-16123-cloudformation-outputs.png" id="fig-cft-outputs"
-alt="Figure 5: CloudFormation stack outputs" />
+<img src="images/ML-16123-cloudformation-outputs.png"
+id="fig-cft-outputs" alt="Figure 5: CloudFormation stack outputs" />
 <figcaption aria-hidden="true">Figure 5: CloudFormation stack
 outputs</figcaption>
 </figure>

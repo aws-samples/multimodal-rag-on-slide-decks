@@ -44,7 +44,7 @@ In the User interaction phase, a question from the user is converted into embedd
 
 ### Ingestion steps:
 
-![Ingestion architecture](img/ML-16123-ingestion-design.jpg){#fig-ingestion-design}
+![Ingestion architecture](images/ML-16123-ingestion-design.jpg){#fig-ingestion-design}
 
 1.	Slides are converted to image files (one per slide) in the JPG format and passed to the Titan Multimodal Embeddings model to generate embeddings. In our blog, we use this slide deck titled [Train and deploy Stable Diffusion using AWS Trainium & AWS Inferentia](https://d1.awsstatic.com/events/Summits/torsummit2023/CMP301_TrainDeploy_E1_20230607_SPEdited.pdf)  from the AWS Summit in Toronto, June 2023 to demonstrate the solution.
 
@@ -57,7 +57,7 @@ In the User interaction phase, a question from the user is converted into embedd
 
 ### User interaction steps:
  
-![User interaction architecture](img/ML-16123-user-interaction-design.jpg){#fig-ingestion-design}
+![User interaction architecture](images/ML-16123-user-interaction-design.jpg){#fig-ingestion-design}
 
 1.	A user submits a question related to the slide deck that has been ingested.
 1.	The user input is converted into embeddings using the Titan Multimodal Embeddings model accessed via Bedrock. An OpenSearch vector search is performed using these embeddings. We perform a K-Nearest Neighbor (`k=1`) search to retrieve the most relevant embedding matching the user query. Setting `k=1` retrieves the most relevant slide to the user question.
@@ -73,23 +73,23 @@ To implement the solution provided in this post, you should have an [AWS account
 
 This solution uses the Titan multimodal embeddings model. Ensure that this model is enabled for use in Amazon Bedrock. In AWS Management Console → Amazon Bedrock, select Model access. If Titan Multimodal Embeddings is enabled, the Access status will state "Access granted" as below.
 
-![User interaction architecture](img/ML-16123-request-model-access.png){#fig-request-model-access}
+![User interaction architecture](images/ML-16123-request-model-access.png){#fig-request-model-access}
 
 If the model is not available, enable access to the model by clicking on "Manage Model Access", selecting "Titan Multimodal Embeddings G1" and clicking on Request model access. The model is enabled for use immediately. 
 
-![User interaction architecture](img/ML-16123-request-model-access-2.png){#fig-request-model-access-2}
+![User interaction architecture](images/ML-16123-request-model-access-2.png){#fig-request-model-access-2}
 
 ## Use AWS CloudFormation template to create the solution stack
 
 |AWS Region                |     Link    |
 |:------------------------:|:-----------:|
-|us-east-1  | [<img src="./img/ML-16123-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=multimodal-stack&templateURL=https://aws-blogs-artifacts-public.s3.amazonaws.com/artifacts/ML-16123/template.yml)|
-|us-west-2          | [<img src="./img/ML-16123-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=multimodal-stack&templateURL=https://aws-blogs-artifacts-public.s3.amazonaws.com/artifacts/ML-16123/template.yml) |
+|us-east-1  | [<img src="./images/ML-16123-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=multimodal-stack&templateURL=https://aws-blogs-artifacts-public.s3.amazonaws.com/artifacts/ML-16123/template.yml)|
+|us-west-2          | [<img src="./images/ML-16123-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=multimodal-stack&templateURL=https://aws-blogs-artifacts-public.s3.amazonaws.com/artifacts/ML-16123/template.yml) |
 
 
 After the stack is created successfully, navigate to the stack's `Outputs` tab on the AWS CloudFormation console and note the values for `MultimodalCollectionEndpoint`, we will use it in the subsequent steps.
 
-![CloudFormation stack outputs](img/ML-16123-cloudformation-outputs.png){#fig-cft-outputs}
+![CloudFormation stack outputs](images/ML-16123-cloudformation-outputs.png){#fig-cft-outputs}
 
 The CloudFormation template creates the following resources:
 
