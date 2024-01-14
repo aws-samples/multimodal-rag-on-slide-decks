@@ -208,116 +208,312 @@ outputs</figcaption>
 
 The CloudFormation template creates the following resources:
 
-    - SageMaker Notebooks
-    - OpenSearch Serverless collection
-    - OSI Pipeline
-    - S3 bucket
-    - SQS Queue
+- `IAM roles`: the following two IAM roles are created. Update these
+  roles to apply least-privilege permissions as discussed in [Security
+  best
+  practices](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#grant-least-privilege).
+  - `SMExecutionRole` with S3, SageMaker, OpenSearch Service, and
+    Bedrock full access.
+  - `OSPipelineExecutionRole` with access to specific SQS and OSI
+    actions.
+- `SageMaker Notebook`: all code for this post is run via this notebook.
+- `OpenSearch Service Serverless collection`: vector database for
+  storing and retrieving embeddings.
+- `OSI Pipeline`: pipeline for ingesting data into OpenSearch Service
+  Serverless.
+- `S3 bucket`: all data for this post is stored in this bucket.
+- `SQS Queue`: events for triggering the OSI pipeline run are put on
+  this queue.
 
-The CloudFormation template creates two IAM roles. Update these roles to
-apply least-privilege permissions as discussed in Security best
-practices. - SMExecutionRole with S3, SageMaker, OpenSearch Service, and
-Bedrock full access. - OSPipelineExecutionRole with access to specific
-SQS and OSI actions.
+### OSI pipeline setup
 
-The CloudFormation template also sets up Event Notification from S3 to
-SQS. Any objects created in the specified prefix
-(’multimodal/osi-embeddings.-json“) will trigger SQS notifications that
-will be used by the OSI pipeline to hydrate the vector store. In
-addition, the CloudFormation template creates policies required to setup
-the OpenSearch components. Update these policies to apply
-least-privilege permissions as discussed in Security best practices. -
-Network, Encryption and Data Access policies required for OpenSearch
-Serverless Collection - Pipeline configuration required to setup OSI
-Pipeline with S3-SQS processing as source and OpenSearch Serverless
-index as sink
+The CloudFormation template sets up the Pipeline configuration required
+to setup OSI Pipeline with S3-SQS processing as source and OpenSearch
+Serverless index as sink. Any objects created in the specified S3 bucket
+and prefix (`multimodal/osi-embeddings-json`) will trigger SQS
+notifications that will be used by the OSI pipeline to ingest data into
+OpenSearch Service Serverless.
+
+The CloudFormation template also creates
+[Network](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/serverless-network.html),
+[Encryption](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/serverless-encryption.html)
+and [Data
+Access](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/serverless-data-access.html)
+policies required for OpenSearch Serverless Collection. Update these
+policies to apply least-privilege permissions as discussed in Security
+best practices.
 
 Note that the CloudFormation template name and OpenSearch Service index
-name are referenced in the SageMaker notebook “3_raginference.ipynb”. If
-the default names are changed, make sure you update the same in the
+name are referenced in the SageMaker notebook
+[`3_rag_inference.ipynb`](./notebooks/3_rag_inference.ipynb). If the
+default names are changed, make sure you update the same in the
 notebook.
 
 ## Testing the solution
 
-After the prerequisite steps are complete, all resources needed to run
-this solution have been created. To run the ‘talk to your slide deck’
-implementation: In AWS Management Console → SageMaker, in left panel
-under Notebook, select Notebook instances. Click on Open JupyterLab next
-to the Notebook instance created by the CloudFormation template. In File
-Browser, traverse to the notebooks folder to see notebooks and
-supporting files. The notebooks are numbered in sequence of execution.
-Instructions and comments in each notebook describe the actions
-performed by that notebook. Notebooks 0, 1 and 2 implement the Ingestion
-Steps described in Solution Design. Notebook 3 implements the User
-Interaction Steps described in Solution Design.
+Once the prerequisite steps are complete and the CloudFormation stack
+has been created successfully, we are now ready to run the “talk to your
+slide deck” implementation:
 
-Notebook 0: Deploying LLaVA Open “0_deployllava.ipynb” to view the
-notebook and run all the cells. This notebook deploys the LLaVA-v1.5-7B
-model to a SageMaker endpoint. We will use this endpoint in the user
-interaction steps. Follow the same process for the remaining ipynb
-files. Remember to run them in sequence of their numbered prefix.
+1.  On the SageMaker console, choose **Notebooks** in the navigation
+    pane.
 
-Notebook 1: Data Preparation In this notebook we download a publicly
-available slide deck and convert each slide into the JPG file format and
-upload these to a S3 bucket.  
-Notebook 2: Data Ingestion In this notebook, we use Titan Multimodal
-Embeddings model to convert the JPG images created in the previous
-notebook into vector embedding. These embeddings and additional metadata
-are stored in a JSON file and uploaded to S3. This action triggers the
-OpenSearch Ingestion pipeline ingest process that processes the file and
-hydrates an OpenSearch Service Index
+2.  Select the `MultimodalNotebookInstance` and choose **Open
+    JupyterLab**.
 
-Here is a sample of the JSON file created (a vector with 4 dimensions is
-shown below. Titan Multimodal Embeddings model generates 1024
-dimensions)
+    <figure>
+    <img src="images/ML-16123-open-jl.png" id="fig-open-jl"
+    alt="Figure 6: SageMaker Notebooks" />
+    <figcaption aria-hidden="true">Figure 6: SageMaker
+    Notebooks</figcaption>
+    </figure>
+
+3.  In `File Browser`, traverse to the notebooks folder to see notebooks
+    and supporting files. The notebooks are numbered in sequence of
+    execution. Instructions and comments in each notebook describe the
+    actions performed by that notebook. We will run these notebook one
+    by one.
+
+4.  Choose [`0_deploy_llava.ipynb`](./notebooks/0_deploy_llava.ipynb) to
+    open it in JupyterLab. When the notebook is open, on the Run menu,
+    choose **Run All Cells** to run the code in this notebook. This
+    notebook will deploy the LLaVA-v1.5-7B model to a SageMaker
+    endpoint.
+
+    - In this notebook we download the LLaVA-v1.5-7B model from
+      HuggingFace Hub, replace the `inference.py` script with
+      [`llava_inference.py`](./notebooks/llava_inference.py) and create
+      a `model.tar.gz` file for this model.
+
+    - The `model.tar.gz` file is uploaded to S3 and used for deploying
+      the model on SageMaker endpoint. The
+      [`llava_inference.py`](./notebooks/llava_inference.py) has
+      additional code to allow reading an image file from S3 and run
+      inference on it.
+
+5.  Next Choose [`1_data_prep.ipynb`](./notebooks/1_data_prep.ipynb) to
+    open it in JupyterLab. When the notebook is open, on the Run menu,
+    choose **Run All Cells** to run the code in this notebook. This
+    notebook will download a publicly available [slide
+    deck]((https://d1.awsstatic.com/events/Summits/torsummit2023/CMP301_TrainDeploy_E1_20230607_SPEdited.pdf))
+    and convert each slide into the JPG file format and upload these to
+    the S3 bucket for this blog.
+
+6.  Next Choose
+    [`2_data_ingestion.ipynb`](./notebooks/2_data_ingestion.ipynb) to
+    open it in JupyterLab. When the notebook is open, on the Run menu,
+    choose **Run All Cells** to run the code in this notebook. We do the
+    following in this notebook:
+
+    - Create an index in the OpenSearch Service Serverless collection.
+      This index stores the embeddings data for the slide deck.
+
+    ``` python
+    session = boto3.Session()
+    credentials = session.get_credentials()
+    auth = AWSV4SignerAuth(credentials, g.AWS_REGION, g.OS_SERVICE)
+
+    os_client = OpenSearch(
+      hosts = [{'host': host, 'port': 443}],
+      http_auth = auth,
+      use_ssl = True,
+      verify_certs = True,
+      connection_class = RequestsHttpConnection,
+      pool_maxsize = 20
+    )
+
+    index_body = """
+    {
+      "settings": {
+          "index.knn": true
+      },
+      "mappings": {
+          "properties": {
+              "vector_embedding": {
+                  "type": "knn_vector",
+                  "dimension": 1024,
+                  "method": {
+                      "name": "hnsw",
+                      "engine": "nmslib",
+                      "parameters": {}
+                  }
+              },
+              "image_path": {
+                  "type": "text"
+              },
+              "metadata": {
+                  "properties": {
+                      "slide_filename": {
+                          "type": "text"
+                      },
+                      "model_id": {
+                          "type": "text"
+                      },
+                      "slide_description": {
+                          "type": "text"
+                      }
+                  }
+              }
+          }
+      }
+    }
+    """
+    index_body = json.loads(index_body)
+    try:
+      response = os_client.indices.create(index_name, body=index_body)
+      logger.info(f"response received for the create index -> {response}")
+    except Exception as e:
+      logger.error(f"error in creating index={index_name}, exception={e}")
+    ```
+
+    - We use Titan Multimodal Embeddings model to convert the JPG images
+      created in the previous notebook into vector embeddings. These
+      embeddings and additional metadata (such as the S3 path of the
+      image file) are stored in a JSON file and uploaded to S3. Note
+      that a single JSON file is created which contains documents for
+      all the slides (images) converted into embeddings. The following
+      code snippet shows how an image (in the form of a Base64 encoded
+      string) is converted into embeddings.
+
+    ``` python
+    def get_multimodal_embeddings(bedrock: botocore.client, image: str) -> np.ndarray:
+        body = json.dumps(dict(inputImage=image))
+        try:
+            response = bedrock.invoke_model(
+                body=body, modelId=g.FMC_MODEL_ID, accept=g.ACCEPT_ENCODING, contentType=g.CONTENT_ENCODING
+            )
+            response_body = json.loads(response.get("body").read())
+            embeddings = np.array([response_body.get("embedding")]).astype(np.float32)
+        except Exception as e:
+            logger.error(f"exception while image(truncated)={image[:10]}, exception={e}")
+            embeddings = None
+
+        return embeddings
+    ```
+
+    - This action triggers the OpenSearch Ingestion pipeline ingest
+      process that processes the file and ingests into the OpenSearch
+      Service Serverless Index. Here is a sample of the JSON file
+      created (a vector with 4 dimensions is shown below. Titan
+      Multimodal Embeddings model generates 1024 dimensions).
+
+    ``` python
+    [
+      {
+        "image_path": "s3://<your-bucket-name>/path/to/file1.json",
+        "metadata": {
+          "slide_filename": "mypowerpoint1.pptx",
+          "model_id": "amazon.titan-embed-image-v1",
+          "slide_description": "This is a test slide deck"
+        },
+        "vector_embedding": [
+          657.6052386529958,
+          0.8865137233123771,
+          763.870264592026,
+          ...
+        ]
+      }
+      ...
+    ] 
+    ```
+
+7.  Next Choose
+    [`3_rag_inference.ipynb`](./notebooks/3_rag_inference.ipynb) to open
+    it in JupyterLab. When the notebook is open, on the Run menu, choose
+    **Run All Cells** to run the code in this notebook. This notebook
+    implements the RAG solution: we convert the user question into
+    embeddings, find a similar image (slide) from the vector database
+    and then provide the retrieved image to LLaVA to generate an answer
+    to the user question.
+
+    - We use the following prompt template.
+
+    ``` python
+    prompt_template: str = """Pretend that you are a helpful assistant that answers questions about content in a slide deck. 
+      Using only the information in the provided slide image answer the following question.
+      If you do not find the answer in the image then say I did not find the answer to this question in the slide deck.
+
+      {question}
+    """
+    ```
+
+    - The following code snippet provides the RAG workflow.
+
+    ``` python
+    # create prompt and convert to embeddings
+    question: str = "As per the AI/ML flywheel, what do the AWS AI/ML services provide?"
+    prompt = prompt_template.format(question=question)
+    text_embeddings = get_text_embeddings(bedrock, question)
+
+    # vector db search
+    vector_db_response: Dict = find_similar_data(text_embeddings)
+
+    # download image for local notebook display
+    s3_img_path = vector_db_response.get('hits', {}).get('hits')[0].get('_source').get('image_path')
+    logger.info(f"going to answer the question=\"{question}\" using the image \"{s3_img_path}\"")
+
+    !aws s3 cp {s3_img_path} .
+    local_img_path = os.path.basename(s3_img_path)
+    display(Image(filename=local_img_path))
+
+    # Ask LLaVA
+    data = {
+        "image" : s3_img_path,
+        "question" : prompt,
+        "temperature" : 0.1,
+    }
+    output = predictor.predict(data)
+    logger.info(f"Image={s3_img_path}\nQuestion: {question}\nAnswer: {output}\n\n")
+    ```
 
 ## Results
 
-Here is a compilation of some of the outputs generated by the User
-Interaction steps of our implementation. The Question column captures
-the user prompt/query, and Answer column is the textual response
-generated by LLaVA. Image is the K-Nearest (k=1) slide match returned by
-the OpenSearch vector search. This slide is interpreted by LLaVA to
-provide the Answer
+Here is a compilation of some user questions and responses generated by
+our implementation. The Question column captures the user question, and
+Answer column is the textual response generated by LLaVA. Image is the
+K-Nearest (`k=1`) slide match returned by the OpenSearch Service
+Serverless vector search. This slide is interpreted by LLaVA to provide
+the Answer
 
-Question Answer Image How does Inf2 compare in performance to comparable
-EC2 instances? I need numbers. According to the slide deck, Inf2
-instances by AWS Inferentia2 offer up to 4x higher throughput and 10x
-lower latency compared to comparable EC2 instances.
+| Question                                                                                                                                     | Answer                                                                                                                                                                                     | Image                              |
+|----------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------|
+| How does Inf2 compare in performance to comparable EC2 instances? I need numbers.                                                            | According to the slide deck, Inf2 instances by AWS Inferentia2 offer up to 4x higher throughput and 10x lower latency compared to comparable EC2 instances.                                | ![](./images/ML-16123-slide-1.png) |
+| As per the AI/ML flywheel, what do the AWS AI/ML services provide?                                                                           | The AWS AI/ML services provide better \$/perfer capabilities, new capabilities, and investment in innovation.                                                                              | ![](./images/ML-16123-slide-2.png) |
+| Compared to GPT-2, how many more parameters does GPT-3 have? What is the numerical difference between the parameter size of GPT-2 and GPT-3? | According to the slide, GPT-3 has 175 billion parameters, while GPT-2 has 1.5 billion parameters. The numerical difference between the parameter size of GPT-2 and GPT-3 is 173.5 billion. | ![](./images/ML-16123-slide-3.png) |
+| What are quarks in particle physics?                                                                                                         | I did not find the answer to this question in the slide deck.                                                                                                                              | ![](./images/ML-16123-slide-4.png) |
 
-As per the AI/ML flywheel, what do the AWS AI/ML services provide? The
-AWS AI/ML services provide better \$/perfer capabilities, new
-capabilities, and investment in innovation.  
-Compared to GPT-2, how many more parameters does GPT-3 have? What is the
-numerical difference between the parameter size of GPT-2 and GPT-3?
-According to the slide, GPT-3 has 175 billion parameters, while GPT-2
-has 1.5 billion parameters. The numerical difference between the
-parameter size of GPT-2 and GPT-3 is 173.5 billion.  
-What are quarks in particle physics? I did not find the answer to this
-question in the slide deck.
-
-Extending the implementation to your slide decks This ingestion process
-and user interaction process can be easily extended to your own slides.
-To use this solution with your slide deck, update the SLIDE_DECK
-variable in globals.py with the URL to your slide deck. Then run the
-ingestion steps described in Testing the solution. Test the ingested
-content by updating questions in ‘3_raginference.ipynb’ and running the
-notebook.
+Multimodal RAG results
 
 ## Tip
 
 Note that you can use OpenSearch Dashboards to interact with the
 OpenSearch API to run quick tests on your index and ingested data.
 
+<figure>
+<img src="images/ML-os-1.png" id="fig-os-1"
+alt="Figure 7: OpenSearch dashboard GET example" />
+<figcaption aria-hidden="true">Figure 7: OpenSearch dashboard GET
+example</figcaption>
+</figure>
+
 ## Cleanup
 
 To avoid incurring future charges, delete the resources. You can do this
 by deleting the stack from the CloudFormation console.
 
+<figure>
+<img src="images/ML-16123-cloudformation-delete-stack.png"
+id="fig-delete-cft" alt="Figure 8: Delete CloudFormation Stack" />
+<figcaption aria-hidden="true">Figure 8: Delete CloudFormation
+Stack</figcaption>
+</figure>
+
 Additionally, delete the SageMaker Inference Endpoint created for LLaVA
-inferencing. You can uncomment the Cleanup step in
-‘3_raginference.ipynb’ and run the cell or alternatively, using
-SageMaker → Inference → Endpoints, delete the Endpoint.
+inferencing. You can do this by uncommenting the cleanup step in
+[`3_rag_inference.ipynb`](./notebooks/3_rag_inference.ipynb) and run the
+cell or by deleting the endpoint from the SageMaker console via
+SageMaker → Inference → Endpoints and then select and delete the
+Endpoint.
 
 ## Conclusion
 
@@ -326,14 +522,53 @@ common mechanism used to share and disseminate information internally
 with the organization and externally with customers or at conferences.
 Over time, rich information can remain buried and hidden in non-text
 modalities like graphs and tables in these slide decks. You can use this
-solution and the power of Large Vision Models like LLaVA to discover new
-information or uncover new perspectives on content in slide decks.
+solution and the power of multimodal FMs such as Titan MultiModal
+Embeddings mode and LLaVA to discover new information or uncover new
+perspectives on content in slide decks.
 
-Future vision Look out for 2 additional blogs as part of this series.
-Blog 2 will cover another approach you could take when ‘talking to your
-slide decks’. This approach will generate and store LLaVA inferences and
-use those stored inferences to respond to user queries. Blog 3 will
-compare the two approaches.
+Look out for two additional blogs as part of this series. Blog 2 will
+cover another approach you could take to “talk to your slide deck”. This
+approach will generate and store LLaVA inferences and use those stored
+inferences to respond to user queries. Blog 3 will compare the two
+approaches.
 
 Portions of this code are released under the Apache 2.0 License as
 referenced here: https://aws.amazon.com/apache-2-0/
+
+------------------------------------------------------------------------
+
+## Author bio
+
+<img style="float: left; margin: 0 10px 0 0;" src="images/ML-16123-Amit.jpg">Amit
+Arora is an AI and ML Specialist Architect at Amazon Web Services,
+helping enterprise customers use cloud-based machine learning services
+to rapidly scale their innovations. He is also an adjunct lecturer in
+the MS data science and analytics program at Georgetown University in
+Washington D.C.
+
+<br><br>
+
+<img style="float: left; margin: 0 10px 0 0;" src="images/ML-16123-Manju.jpg">Manju
+Prasad is a Senior Solutions Architect within Strategic Accounts at
+Amazon Web Services. She focuses on providing technical guidance in a
+variety of domains, including AI/ML to a marquee M&E customer. Prior to
+joining AWS, she has worked for companies in the Financial Services
+sector and also a startup.
+
+<br><br>
+
+<img style="float: left; margin: 0 10px 0 0;" src="images/ML-16123-Archana.jpg">Archana
+Inapudi is a Senior Solutions Architect at AWS supporting Strategic
+Customers. She has over a decade of experience helping customers design
+and build data analytics, and database solutions. She is passionate
+about using technology to provide value to customers and achieve
+business outcomes.
+
+<br><br>
+
+<img style="float: left; margin: 0 10px 0 0;" src="images/ML-16123-Antara.jpg">Antara
+Raisa is an AI and ML Solutions Architect at Amazon Web Services
+supporting Strategic Customers based out of Dallas, Texas. She also has
+previous experience working with large enterprise partners at AWS, where
+she worked as a Partner Success Solutions Architect for digital native
+customers.
