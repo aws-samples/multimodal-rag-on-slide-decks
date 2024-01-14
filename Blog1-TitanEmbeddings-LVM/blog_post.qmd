@@ -16,7 +16,7 @@ format:
     code-line-numbers: true
     highlight-style: github
   gfm: 
-    output-file: blog_post.md
+    output-file: README.md
 ---
 
 _Amit Arora_, _Archana Inapudi_, _Manju Prasad_, _Antara Raisa_
