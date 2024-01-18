@@ -1,3 +1,4 @@
+# This code is from Liu, Haotian, LLaVA: Large Language and Vision Assistant, GitHub repository, https://github.com/haotian-liu/LLaVA given under Apache 2.0 license ”
 import requests
 from PIL import Image
 from io import BytesIO
