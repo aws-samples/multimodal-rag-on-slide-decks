@@ -243,11 +243,10 @@ policies required for OpenSearch Serverless Collection. Update these
 policies to apply least-privilege permissions as discussed in Security
 best practices.
 
-Note that the CloudFormation template name and OpenSearch Service index
-name are referenced in the SageMaker notebook
-[`3_rag_inference.ipynb`](./notebooks/3_rag_inference.ipynb). If the
-default names are changed, make sure you update the same in the
-notebook.
+Note that the CloudFormation template name is referenced in SageMaker
+notebooks. If the default name is changed, make sure you update the same
+in [`globals.py`](../notebooks/globals.py).
+
 
 ## Testing the solution
 
