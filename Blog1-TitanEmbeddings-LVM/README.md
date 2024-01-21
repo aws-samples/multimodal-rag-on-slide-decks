@@ -245,7 +245,7 @@ best practices.
 
 Note that the CloudFormation template name is referenced in SageMaker
 notebooks. If the default name is changed, make sure you update the same
-in [`globals.py`](../notebooks/globals.py).
+in [`globals.py`](./notebooks/globals.py).
 
 
 ## Testing the solution
