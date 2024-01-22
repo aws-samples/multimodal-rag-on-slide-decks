@@ -483,6 +483,8 @@ the Answer
 
 Multimodal RAG results
 
+Feel free to extend this solution to your slide decks. Simply update the SLIDE_DECK variable in globals.py with a URL to your slide deck and run the ingestion steps detailed in Testing the solution section
+
 ## Tip
 
 Note that you can use OpenSearch Dashboards to interact with the
@@ -525,14 +527,14 @@ solution and the power of multimodal FMs such as Titan MultiModal
 Embeddings mode and LLaVA to discover new information or uncover new
 perspectives on content in slide decks.
 
+We encourage you to learn more by exploring [`SageMaker JumpStart`](https://aws.amazon.com/sagemaker/jumpstart/), [`Amazon Titan models`](https://aws.amazon.com/bedrock/titan/), [`Amazon Bedrock`](https://aws.amazon.com/bedrock/), and [`OpenSearch Service`](https://aws.amazon.com/opensearch-service/) and building a solution using the sample implementation provided in this post
+
 Look out for two additional blogs as part of this series. Blog 2 will
 cover another approach you could take to “talk to your slide deck”. This
 approach will generate and store LLaVA inferences and use those stored
 inferences to respond to user queries. Blog 3 will compare the two
 approaches.
 
-Portions of this code are released under the Apache 2.0 License as
-referenced here: https://aws.amazon.com/apache-2-0/
 
 ------------------------------------------------------------------------
 
