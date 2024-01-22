@@ -6,8 +6,8 @@ Part 1: Talk to your slide deck (Multimodal RAG) using foundation models
 
 With the advent of generative AI, today’s foundation models (FMs), such
 as the large language models (LLMs) Claude 2 and Llama 2 can perform a
-range of (generative) tasks such as question answering, content creation
-and others on “text” data. Real world data however, exists in multiple
+range of (generative) tasks such as question answering, summarization, content creation
+on “text” data. Real world data however, exists in multiple
 modalities such as “text”, “images”, “video” and “audio”. Take a
 PowerPoint slide deck for example, It could contain information in the
 form of text, or embedded in graphs, tables and pictures. In this blog,
@@ -51,7 +51,7 @@ This solution includes the following components:
   solution.
 - [Amazon
   SageMaker](https://docs.aws.amazon.com/sagemaker/latest/dg/whatis.html):
-  the LLaVA model to model is deployed on a SageMaker endpoint using
+  the LLaVA model is deployed on a SageMaker endpoint using
   SageMaker hosting services and we use the resulting endpoint to run
   inferences against the LLaVA model. We also use SageMaker Notebooks to
   orchestrate and demonstrate this solution end-to-end.
@@ -161,7 +161,7 @@ To implement the solution provided in this post, you should have an [AWS
 account](https://signin.aws.amazon.com/signin?redirect_uri=https%3A%2F%2Fportal.aws.amazon.com%2Fbilling%2Fsignup%2Fresume&client_id=signup)
 and familarity with FMs, Bedrock, SageMaker and OpenSearch Service.
 
-This solution uses the Titan multimodal embeddings model. Ensure that
+This solution uses the Titan Multimodal Embeddings model. Ensure that
 this model is enabled for use in Amazon Bedrock. In AWS Management
 Console → Amazon Bedrock, select Model access. If Titan Multimodal
 Embeddings is enabled, the Access status will state “Access granted” as
@@ -523,7 +523,7 @@ common mechanism used to share and disseminate information internally
 with the organization and externally with customers or at conferences.
 Over time, rich information can remain buried and hidden in non-text
 modalities like graphs and tables in these slide decks. You can use this
-solution and the power of multimodal FMs such as Titan MultiModal
+solution and the power of multimodal FMs such as Titan Multimodal
 Embeddings mode and LLaVA to discover new information or uncover new
 perspectives on content in slide decks.
 
