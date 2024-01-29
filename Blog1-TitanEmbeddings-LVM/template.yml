@@ -11,6 +11,7 @@ Metadata:
           - OSIndexName
           - BucketName
           - QueueName
+          - NetworkPolicyName
     ParameterLabels:      
       OSCollectionName:
         default: OpenSearch vector index name
@@ -20,6 +21,8 @@ Metadata:
         default: Bucket used to store data
       QueueName:
         default: SQS Queue
+      NetworkPolicyName:
+        default: Network policy name for OSI
 
 Parameters:
   OSCollectionName:
@@ -42,6 +45,10 @@ Parameters:
     Default: "multimodal-queue"
     Type: String
     Description: SQS Queue name
+  NetworkPolicyName:
+    Default: "multimodal-network-policy"
+    Type: String
+    Description: Network policy name for OSI
 
 Resources:
   OSPolicy:
@@ -93,7 +100,7 @@ Resources:
   NetworkPolicy: 
     Type: "AWS::OpenSearchServerless::SecurityPolicy" 
     Properties: 
-      Name: "multimodal-network-policy"
+      Name: !Ref NetworkPolicyName
       Type: "network" 
       Description: Network policy for OS collections
       Policy: !Sub >-
@@ -290,7 +297,7 @@ Resources:
                 aws:
                   serverless: true
                   serverless_options:
-                    network_policy_name: ${NetworkPolicy}
+                    network_policy_name: ${NetworkPolicyName}
                   sts_role_arn: ${OSPipelineExecutionRole.Arn}
                   region: ${AWS::Region}
       PipelineName: "multimodalpipeline"
