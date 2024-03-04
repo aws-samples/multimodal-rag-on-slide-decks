@@ -1,4 +1,4 @@
-boto3
+
 git+https://github.com/haotian-liu/LLaVA.git@v1.1.1
 huggingface-hub==0.19.4
 sagemaker==2.199.0
@@ -13,3 +13,5 @@ opensearch-py==2.4.2
 numexpr==2.8.0
 packaging>=22.0
 docutils
+requests
+requests-auth-aws-sigv4

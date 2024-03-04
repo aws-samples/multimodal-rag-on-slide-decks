@@ -1,0 +1,3 @@
+boto3
+git+https://github.com/haotian-liu/LLaVA.git@v1.1.1
+

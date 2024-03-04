@@ -7,7 +7,7 @@ import sagemaker
 
 # model deployment
 HF_MODEL_ID: str = "liuhaotian/llava-v1.5-13b"
-LLM_ENGINE: str = "deepspeed"
+LLM_ENGINE: str = "DeepSpeed"
 
 # HF_TASK: str = "question-answering"
 # TRANSFORMERS_VERSION: str = "4.28.1"
@@ -27,7 +27,8 @@ S3_MODEL_PREFIX: str = "model"
 # Amazon Titan multimodal model
 AWS_REGION: str = boto3.Session().region_name
 FMC_URL: str = f"https://bedrock-runtime.{AWS_REGION}.amazonaws.com"
-FMC_MODEL_ID: str = "amazon.titan-embed-image-v1"
+FMC_MODEL_ID: str = "amazon.titan-embed-text-v1"
+CLAUDE_MODEL_ID: str = "anthropic.claude-v2"
 ACCEPT_ENCODING: str = "application/json"
 CONTENT_ENCODING: str = "application/json"
 
@@ -48,6 +49,6 @@ SLIDE_DECK: str = "https://d1.awsstatic.com/events/Summits/torsummit2023/CMP301_
 
 # AWS CloudFormation stack that created the resources for this blog post including this notebook
 # if a different name is used while creating the CloudFormation stack then change this to match the name you used
-CFN_STACK_NAME: str = "multimodal-stack"
+CFN_STACK_NAME: str = "multimodal-blog2-stack"
 
 GENERIC_PROMPT = "Describe image and the table with variables chart in the image. Identify the rows and features or criteria (columns) including their names, data or ratings, or any numbers that are present. Explain what these numbers might signify. Give me any additional information or descriptions, outside the chart. Conclude with a cost or value comparison of the products based on the chart data. Your response should be extremely detailed and data oriented. Only give the data/numbers that are clearly visible in the image and DO NOT mention anything if it is not in the image or if it is blurry. Be completely accurate"

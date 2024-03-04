@@ -2,8 +2,11 @@
 Utility functions for S3 and CloudFormation used by the rest of the code
 """
 import os
+import json
 import boto3
 import logging
+import botocore
+import numpy as np
 import globals as g
 from typing import List
 from sagemaker.s3 import S3Uploader
@@ -49,3 +52,17 @@ def get_bucket_name(stackname: str) -> str:
     outputs = get_cfn_outputs(stackname)
     bucketname = outputs['BucketName']
     return bucketname
+
+def get_multimodal_embeddings(bedrock: botocore.client, image_desc: str) -> np.ndarray:
+    body = json.dumps(dict(inputText=image_desc))
+    try:
+        response = bedrock.invoke_model(
+            body=body, modelId=g.FMC_MODEL_ID, accept=g.ACCEPT_ENCODING, contentType=g.CONTENT_ENCODING
+        )
+        response_body = json.loads(response.get("body").read())
+        embeddings = np.array([response_body.get("embedding")]).astype(np.float32)
+    except Exception as e:
+        logger.error(f"exception while image(truncated)={image[:10]}, exception={e}")
+        embeddings = None
+
+    return embeddings
