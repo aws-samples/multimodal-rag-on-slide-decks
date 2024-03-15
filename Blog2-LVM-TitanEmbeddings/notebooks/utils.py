@@ -15,6 +15,19 @@ logger = logging.getLogger(__name__)
 
 s3 = boto3.client('s3')
 
+llm_prompt: str = """
+
+Human: Use the summary to provide a concise answer to the question. If you don't know the answer, just say that you don't know, don't try to make up an answer.
+<question>
+{question}
+</question>
+
+<summary>
+{summary}
+</summary>
+
+Assistant:"""
+
 def upload_to_s3(local_file_path:str, bucket_name: str, bucket_prefix:str) -> None:
     global s3
     try:
@@ -24,8 +37,7 @@ def upload_to_s3(local_file_path:str, bucket_name: str, bucket_prefix:str) -> No
             logger.info(f"File {local_file_path} uploaded to {bucket_name}/{s3_key}.")
     except Exception as e:
         logger.error(f"error uploading file to S3: {e}")
-
-
+        
 def download_image_files_from_s3(bucket:str, bucket_image_prefix:str, local_image_dir:str, image_file_extn:str) -> List:
     images = s3.list_objects_v2(Bucket=bucket, Prefix=bucket_image_prefix)['Contents']
     local_file_paths: List = []
@@ -53,16 +65,49 @@ def get_bucket_name(stackname: str) -> str:
     bucketname = outputs['BucketName']
     return bucketname
 
-def get_multimodal_embeddings(bedrock: botocore.client, image_desc: str) -> np.ndarray:
-    body = json.dumps(dict(inputText=image_desc))
+def get_text_embedding(bedrock: botocore.client, prompt_data: str) -> np.ndarray:
+    body = json.dumps({
+        "inputText": prompt_data,
+    })    
     try:
         response = bedrock.invoke_model(
             body=body, modelId=g.FMC_MODEL_ID, accept=g.ACCEPT_ENCODING, contentType=g.CONTENT_ENCODING
         )
-        response_body = json.loads(response.get("body").read())
-        embeddings = np.array([response_body.get("embedding")]).astype(np.float32)
+        response_body = json.loads(response['body'].read())
+        embedding = response_body.get('embedding')
     except Exception as e:
-        logger.error(f"exception while image(truncated)={image[:10]}, exception={e}")
-        embeddings = None
+        logger.error(f"exception={e}")
+        embedding = None
 
-    return embeddings
+    return embedding
+
+def get_llm_response(bedrock: botocore.client, question: str, summary: str) -> str:
+    prompt = llm_prompt.format(question=question, summary=summary)
+    
+    body = json.dumps(
+    {
+        "anthropic_version": "bedrock-2023-05-31",
+        "max_tokens": 1000,
+        "messages": [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": prompt},
+                ],
+            }
+        ],
+    })
+        
+    try:
+        response = bedrock.invoke_model(
+        modelId=g.CLAUDE_MODEL_ID,
+        body=body)
+
+        response_body = json.loads(response['body'].read().decode("utf-8"))
+        llm_response = response_body['content'][0]['text'].replace('"', "'")
+        
+    except Exception as e:
+        logger.error(f"exception while slide_text={summary[:10]}, exception={e}")
+        llm_response = None
+
+    return llm_response
