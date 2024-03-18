@@ -1,5 +1,5 @@
 ---
-title: "Part 2: Talk to your slide deck (Multimodal RAG) using foundation models (FMs) hosted on Amazon Bedrock"
+title: "Talk to your slide deck (Multimodal RAG) using foundation models (FMs) hosted on Amazon Bedrock – Part 2"
 format:
   html:
     embed-resources: true
@@ -21,66 +21,63 @@ format:
 
 _Amit Arora_, _Archana Inapudi_, _Manju Prasad_, _Antara Raisa_
 
-In Part 1 of this series, we drafted an architecture for Multimodal RAG where we converted individual slides from a slide deck into embeddings using the [Amazon Titan Multimodal Embeddings](https://docs.aws.amazon.com/bedrock/latest/userguide/titan-multiemb-models.html) model that were stored in a vector database and then had the [Large Language-and-Vision Assistant (LLaVA)](https://llava-vl.github.io/) model generate text responses to user questions based on the most similar slide retrieved from the vector database.
+In [part 1](https://aws.amazon.com/blogs/machine-learning/talk-to-your-slide-deck-using-multimodal-foundation-models-hosted-on-amazon-bedrock-and-amazon-sagemaker-part-1/) of this series, we presented a solution that used [Amazon Titan Multimodal Embeddings](https://docs.aws.amazon.com/bedrock/latest/userguide/titan-multiemb-models.html) model to convert individual slides from a slide deck into embeddings. We stored the embeddings in a vector database and then used the [Large Language-and-Vision Assistant (LLaVA 1.5-7b)](https://llava-vl.github.io/) model to generate text responses to user questions based on the most similar slide retrieved from the vector database. We used AWS services including [Amazon Bedrock](https://aws.amazon.com/bedrock/), [Amazon SageMaker](https://aws.amazon.com/sagemaker/), and [Amazon OpenSearch Serverless](https://aws.amazon.com/opensearch-service/features/serverless/) in this solution.
 
-In Part 2 of this series we demonstrate a different approach where we have the [Anthropic Claude 3 Sonnet]() model first generate text descriptions for each slide in the slide deck, these descriptions are converted into text embeddings using [Amazon Titan Text Embeddings](https://docs.aws.amazon.com/bedrock/latest/userguide/titan-embedding-models.html) model and stored in a vector database and then we again use the [Anthropic Claude 3 Sonnet](https://aws.amazon.com/bedrock/claude/) model to generate an answer to the user question based on the most relevant text description retrieved from the vector database. 
 
-You can test both approches for your dataset and evaluate the results to see which approach gives you the best results. Evaluation of the results is a topic that we explore in PArt 3 of this series.
+In part 2 of this series, we demonstrate a different approach. We use [Anthropic Claude 3 Sonnet](https://aws.amazon.com/bedrock/claude/) model to generate text descriptions for each slide in the slide deck. These descriptions are then converted into text embeddings using [Amazon Titan Text Embeddings](https://docs.aws.amazon.com/bedrock/latest/userguide/titan-embedding-models.html) model and stored in a vector database. Then we use the Claude 3 Sonnet model to generate answers to user questions based on the most relevant text description retrieved from the vector database.
+
+You can test both approches for your dataset and evaluate the results to see which approach gives you the best results. Evaluation of the results is a topic that we will explore in part 3 of this series.
 
 ## Solution overview
 
-The solution presented provides an implementation for answering questions using information contained in the text and visual elements of a slide deck. The design relies on the concept of Retrieval Augmented Generation (RAG). Traditionally, RAG has been associated with textual data that can be processed by LLMs. In this blog, we extend RAG to include images as well. This provides a powerful search capability to extract contextually relevant content from visual elements like tables and graphs along with text.
-
-There are different ways to design a RAG solution that includes images. We have presented one approach here and will follow-up with an alternate approach in the second blog of this three-part blog series. 
+The solution presented provides an implementation for answering questions using information contained in text and visual elements of a slide deck. The design relies on the concept of Retrieval Augmented Generation (RAG). Traditionally, RAG has been associated with textual data that can be processed by LLMs. In this series, we extend RAG to include images as well. This provides a powerful search capability to extract contextually relevant content from visual elements like tables and graphs along with text.
 
 This solution includes the following components:
 
-- [Amazon Titan Multimodal Embeddings](https://docs.aws.amazon.com/bedrock/latest/userguide/titan-multiemb-models.html) model: this FM is used to generate embeddings for the content in the slide deck used in this blog. As a multimodal model, this Titan model can process text, image or a combination as input and generate embeddings. The Titan Multimodal Embeddings model generates vectors (embeddings) of dimension 1024 and is accessed via the Amazon Bedrock service.
-- [Anthropic Claude 3 Sonnet]()
-- [Amazon OpenSearch Service Serverless](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/serverless-overview.html): OpenSearch Service Serverless is an on-demand serverless configuration for Amazon OpenSearch Service. We use OpenSearch Service Serverless as a vector database for storing embeddings generated by the Titan Multimodal Embeddings model. An index created in the OpenSearch Service Serverless collection serves as the vector store for our RAG solution. 
-- [Amazon OpenSearch Ingestion](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/ingestion.html) (OSI): OSI is a fully managed, serverless data collector that delivers data to Amazon OpenSearch Service domains and OpenSearch Serverless collections. In this blog, we are using an OSI pipeline to deliver data to the OpenSearch Serverless vector store. 
+- **Amazon Titan Text Embeddings** is a text embeddings model that converts natural language text including single words, phrases, or even large documents, into numerical representations that can be used to power use cases such as search, personalization, and clustering based on semantic similarity.
+- **Anthropic Claude 3 Sonnet** 
+- **Amazon OpenSearch Service Serverless** is an on-demand serverless configuration for Amazon OpenSearch Service. We use OpenSearch Service Serverless as a vector database for storing embeddings generated by the Titan Multimodal Embeddings model. An index created in the OpenSearch Service Serverless collection serves as the vector store for our RAG solution. 
+- [Amazon OpenSearch Ingestion](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/ingestion.html) (OSI) is a fully managed, serverless data collector that delivers data to Amazon OpenSearch Service domains and OpenSearch Serverless collections. In this blog, we use an OSI pipeline API to deliver data to the OpenSearch Serverless vector store. 
 
 ## Solution design 
-The solution design consists of two parts - Ingestion and User interaction. During ingestion, we process the input slide deck by converting each slide into an image, generate embeddings for these images and then populate the vector data store. These steps are completed prior to the user interaction steps.
+The solution design consists of two parts - Ingestion and User interaction. During ingestion, we process the input slide deck by converting each slide into an image, generating descriptions and embeddings for each image. We then populate the vector data store with the slide embeddings and descriptions. These steps are completed prior to the user interaction steps.
 
-In the User interaction phase, a question from the user is converted into embeddings and a similarity search is run on the vector database to find a slide that could potentially contain answers to user question. We then provide this slide (in the form of an image file) to the LLaVA model and the user question as a prompt to generate an answer to the query. All the code for this post is available in the [GitHub](https://github.com/aws-samples/multimodal-rag-on-slide-decks/tree/main/Blog1-TitanEmbeddings-LVM) repo.
+In the User interaction phase, a question from the user is converted into embeddings and a similarity search is run on the vector database to find a slide that could potentially contain answers to user question. We then provide the slide description and the user question to the Claude 3 Sonnet model to generate an answer to the query. All the code for this post is available in the [GitHub](https://github.com/aws-samples/multimodal-rag-on-slide-decks/tree/main/Blog2-LVM-TitanEmbeddings) repo.
 
 ### Ingestion steps:
 
-![Ingestion architecture](images/ML-16123-ingestion-design.jpg){#fig-ingestion-design}
+![Ingestion architecture](images/ML-16123-2-ingestion-design.png){#fig-ingestion-design}
 
-1.	Slides are converted to image files (one per slide) in the JPG format and passed to the Titan Multimodal Embeddings model to generate embeddings. In our blog, we use this slide deck titled [Train and deploy Stable Diffusion using AWS Trainium & AWS Inferentia](https://d1.awsstatic.com/events/Summits/torsummit2023/CMP301_TrainDeploy_E1_20230607_SPEdited.pdf) from the AWS Summit in Toronto, June 2023 to demonstrate the solution.
+1.	Slides are converted to image files (one per slide) in the JPG format and passed to Claude 3 Sonnet model and then to Titan Text Embeddings model to generate embeddings. In this series, we use slide deck titled [Train and deploy Stable Diffusion using AWS Trainium & AWS Inferentia](https://d1.awsstatic.com/events/Summits/torsummit2023/CMP301_TrainDeploy_E1_20230607_SPEdited.pdf) from the AWS Summit in Toronto, June 2023 to demonstrate the solution.
 
-    - The sample deck has 31 slides and thus we generate 31 sets of vector embeddings, each with 1024 dimensions. We add additional metadata fields to these generated vector embeddings and create a JSON file. These additional metadata fields can be used to perform rich search queries using OpenSearch’s powerful search capabilities. 
+    - The sample deck has 31 slides and thus we generate 31 sets of vector embeddings, each with 1536 dimensions. We add additional metadata fields to perform rich search queries using OpenSearch’s powerful search capabilities. 
 
-1.	The generated embeddings are put together in a single JSON file that is uploaded to Amazon S3
-1.	Via S3 Event Notification, an event is put on the Amazon Simple Queue Service (SQS) queue.
-1.	This event on the SQS queue acts as a trigger to run the OSI pipeline which in turn ingests the data (JSON file) as documents into the OpenSearch Service Serverless index. 
+1.	The embeddings are ingested into OSI pipeline via an API call, the OSI pipeline in turn ingests the data as documents into the OpenSearch Service Serverless index. 
     - Note that the OpenSearch Service Serverless index is configured as the sink for this pipeline and it is created as part of the OpenSearch Service Serverless collection.
 
 ### User interaction steps:
  
-![User interaction architecture](images/ML-16123-user-interaction-design.jpg){#fig-ingestion-design}
+![User interaction architecture](images/ML-16123-2-user-interaction-design.png){#fig-user-interaction-design}
 
 1.	A user submits a question related to the slide deck that has been ingested.
-1.	The user input is converted into embeddings using the Titan Multimodal Embeddings model accessed via Bedrock. An OpenSearch vector search is performed using these embeddings. We perform a K-Nearest Neighbor (`k=1`) search to retrieve the most relevant embedding matching the user query. Setting `k=1` retrieves the most relevant slide to the user question.
-1.	The metadata of the response from OpenSearch Services Serverless contains a path to the image corresponding to the most relevant slide.
-1.	A prompt is created by combining the user question and the image path and provided to LLaVA hosted on SageMaker. The LLaVA model is able to understand the user question and answer it by examining the data in the image.
+1.	The user input is converted into embeddings using the Titan Text Embeddings model accessed via Bedrock. An OpenSearch vector search is performed using these embeddings. We perform a K-Nearest Neighbor (`k=1`) search to retrieve the most relevant embedding matching the user query. Setting `k=1` retrieves the most relevant slide to the user question.
+1.	The metadata of the response from OpenSearch Services Serverless contains a path to the image and description corresponding to the most relevant slide.
+1.	A prompt is created by combining the user question and the image description. The prompt is provided to Claude 3 Sonnet hosted on SageMaker.
 1.	Result of this inference is returned to the user. 
 
-These steps are discussed in detail in the following sections. See Results section for screenshots and details on the output. 
+These steps are discussed in detail in the following sections. See Results section for screenshots and details on the output.
 
 ## Prerequisites
 
-To implement the solution provided in this post, you should have an [AWS account](https://signin.aws.amazon.com/signin?redirect_uri=https%3A%2F%2Fportal.aws.amazon.com%2Fbilling%2Fsignup%2Fresume&client_id=signup) and familarity with FMs, Bedrock, SageMaker and OpenSearch Service. 
+To implement the solution provided in this post, you should have an [AWS account](https://signin.aws.amazon.com/signin?redirect_uri=https%3A%2F%2Fportal.aws.amazon.com%2Fbilling%2Fsignup%2Fresume&client_id=signup) and familarity with FMs, Bedrock, SageMaker, and OpenSearch Service. 
 
-This solution uses the Titan multimodal embeddings model. Ensure that this model is enabled for use in Amazon Bedrock. In AWS Management Console → Amazon Bedrock, select Model access. If Titan Multimodal Embeddings is enabled, the Access status will state "Access granted" as below.
+This solution uses the Claude 3 Sonnet and Titan Text embeddings models hosted on Amazon Bedrock. Ensure that these models are enabled for use in Amazon Bedrock. In AWS Management Console → Amazon Bedrock, select Model access. If models are enabled, the Access status will state "Access granted" as below.
 
-![User interaction architecture](images/ML-16123-request-model-access.png){#fig-request-model-access}
+![Review model access](images/ML-16123-request-model-access.png){#fig-request-model-access}
 
-If the model is not available, enable access to the model by clicking on "Manage Model Access", selecting "Titan Multimodal Embeddings G1" and clicking on Request model access. The model is enabled for use immediately. 
+If the models are not available, enable access by clicking on "Manage Model Access", selecting "Titan Embeddings G1 - Text" and "Claude 3 Sonnet" and clicking on Request model access. The models are enabled for use immediately.
 
-![User interaction architecture](images/ML-16123-request-model-access-2.png){#fig-request-model-access-2}
+![Request model access](images/ML-16123-request-model-access-2.png){#fig-request-model-access-2}
 
 ## Use AWS CloudFormation template to create the solution stack
 
