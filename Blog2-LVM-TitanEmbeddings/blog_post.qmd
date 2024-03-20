@@ -143,36 +143,40 @@ Once the prerequisite steps are complete and the CloudFormation stack has been c
     index_body = """
     {
       "settings": {
-          "index.knn": true
+        "index.knn": true
       },
       "mappings": {
-          "properties": {
-              "vector_embedding": {
-                  "type": "knn_vector",
-                  "dimension": 1024,
-                  "method": {
-                      "name": "hnsw",
-                      "engine": "nmslib",
-                      "parameters": {}
-                  }
-              },
-              "image_path": {
+        "properties": {
+          "vector_embedding": {
+            "type": "knn_vector",
+            "dimension": 1536,
+            "method": {
+              "name": "hnsw",
+              "engine": "nmslib",
+              "parameters": {}
+            }
+          },
+          "image_path": {
+            "type": "text"
+          },
+          "slide_text": {
+            "type": "text"
+          },
+          "slide_number": {
+            "type": "text"
+          },
+          "metadata": { 
+            "properties" :
+              {
+                "filename" : {
+                  "type" : "text"
+                },
+                "desc":{
                   "type": "text"
-              },
-              "metadata": {
-                  "properties": {
-                      "slide_filename": {
-                          "type": "text"
-                      },
-                      "model_id": {
-                          "type": "text"
-                      },
-                      "slide_description": {
-                          "type": "text"
-                      }
-                  }
+                }
               }
           }
+        }
       }
     }
     """
@@ -184,65 +188,144 @@ Once the prerequisite steps are complete and the CloudFormation stack has been c
       logger.error(f"error in creating index={index_name}, exception={e}")
     ```
 
-    - We use Titan Multimodal Embeddings model to convert the JPG images created in the previous notebook into vector embeddings. These embeddings and additional metadata (such as the S3 path of the image file) are stored in a JSON file and uploaded to S3. Note that a single JSON file is created which contains documents for all the slides (images) converted into embeddings. The following code snippet shows how an image (in the form of a Base64 encoded string) is converted into embeddings.
+    - We use Claude 3 Sonnet and Titan Text Embeddings models to convert the JPG images created in the previous notebook into vector embeddings. These embeddings and additional metadata (such as the S3 path and description of the image file) are stored in the index along with the embeddings. The following code snippet shows how Claude 3 Sonnet generates image descriptions.
 
     ```{.python}
-    def get_multimodal_embeddings(bedrock: botocore.client, image: str) -> np.ndarray:
-        body = json.dumps(dict(inputImage=image))
-        try:
-            response = bedrock.invoke_model(
-                body=body, modelId=g.FMC_MODEL_ID, accept=g.ACCEPT_ENCODING, contentType=g.CONTENT_ENCODING
-            )
-            response_body = json.loads(response.get("body").read())
-            embeddings = np.array([response_body.get("embedding")]).astype(np.float32)
-        except Exception as e:
-            logger.error(f"exception while image(truncated)={image[:10]}, exception={e}")
-            embeddings = None
+    def get_img_desc(image_file_path: str, prompt: str):
+    # read the file, MAX image size supported is 2048 * 2048 pixels
+    with open(image_file_path, "rb") as image_file:
+        input_image_b64 = image_file.read().decode('utf-8')
+  
+    body = json.dumps(
+        {
+            "anthropic_version": "bedrock-2023-05-31",
+            "max_tokens": 1000,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": "image/jpeg",
+                                "data": input_image_b64
+                            },
+                        },
+                        {"type": "text", "text": prompt},
+                    ],
+                }
+            ],
+        }
+    )
+    
+    response = bedrock.invoke_model(
+        modelId=g.CLAUDE_MODEL_ID,
+        body=body
+    )
 
-        return embeddings
+    resp_body = json.loads(response['body'].read().decode("utf-8"))
+    resp_text = resp_body['content'][0]['text'].replace('"', "'")
+
+    return resp_text
     ```
 
-    - This action triggers the OpenSearch Ingestion pipeline ingest process that processes the file and ingests into the OpenSearch Service Serverless Index. Here is a sample of the JSON file created (a vector with 4 dimensions is shown below. Titan Multimodal Embeddings model generates 1024 dimensions).
+    - The image descriptions are passed to Titan Text Embeddings model to generate vector embeddings. These embeddings and additional metadata (such as the S3 path and description of the image file) are stored in the index along with the embeddings. The following code snippet shows the call to Titan Text Embeddings model.
 
     ```{.python}
-    [
-      {
-        "image_path": "s3://<your-bucket-name>/path/to/file1.json",
+    def get_text_embedding(bedrock: botocore.client, prompt_data: str) -> np.ndarray:
+    body = json.dumps({
+        "inputText": prompt_data,
+    })    
+    try:
+        response = bedrock.invoke_model(
+            body=body, modelId=g.FMC_MODEL_ID, accept=g.ACCEPT_ENCODING, contentType=g.CONTENT_ENCODING
+        )
+        response_body = json.loads(response['body'].read())
+        embedding = response_body.get('embedding')
+    except Exception as e:
+        logger.error(f"exception={e}")
+        embedding = None
+
+    return embedding
+    ```
+
+    - The data is ingested into OpenSearch Service Serverless Index by making an API call to the OpenSearch Ingestion pipeline. The following code snippet shows the call made via the requests HTTP library.
+
+    ```{.python}
+    data = json.dumps([{
+        "image_path": input_image_s3, 
+        "slide_text": resp_text, 
+        "slide_number": slide_number, 
         "metadata": {
-          "slide_filename": "mypowerpoint1.pptx",
-          "model_id": "amazon.titan-embed-image-v1",
-          "slide_description": "This is a test slide deck"
-        },
-        "vector_embedding": [
-          657.6052386529958,
-          0.8865137233123771,
-          763.870264592026,
-          ...
-        ]
-      }
-      ...
-    ] 
+            "filename": obj_name, 
+            "desc": "" 
+        }, 
+        "vector_embedding": embedding
+    }])
+
+    r = requests.request(
+        method='POST', 
+        url=osi_endpoint, 
+        data=data,
+        auth=AWSSigV4('osis'))
     ```
-1. Next Choose [`3_rag_inference.ipynb`](./notebooks/3_rag_inference.ipynb) to open it in JupyterLab. When the notebook is open, on the Run menu, choose **Run All Cells** to run the code in this notebook. This notebook implements the RAG solution: we convert the user question into embeddings, find a similar image (slide) from the vector database and then provide the retrieved image to LLaVA to generate an answer to the user question.
+1. Next Choose [`3_rag_inference.ipynb`](./notebooks/3_rag_inference.ipynb) to open it in JupyterLab. When the notebook is open, on the Run menu, choose **Run All Cells** to run the code in this notebook. This notebook implements the RAG solution: we convert the user question into embeddings, find a similar image description from the vector database and then provide the retrieved description to Claude 3 Sonnet to generate an answer to the user question.
 
     - We use the following prompt template.
 
     ```{.python}
-    prompt_template: str = """Pretend that you are a helpful assistant that answers questions about content in a slide deck. 
-      Using only the information in the provided slide image answer the following question.
-      If you do not find the answer in the image then say I did not find the answer to this question in the slide deck.
+      llm_prompt: str = """
 
+      Human: Use the summary to provide a concise answer to the question to the best of your abilities without making anything up.
+      <question>
       {question}
-    """
+      </question>
+
+      <summary>
+      {summary}
+      </summary>
+
+      Assistant:"""
     ```
 
     - The following code snippet provides the RAG workflow.
 
     ```{.python}
+    def get_llm_response(bedrock: botocore.client, question: str, summary: str) -> str:
+      prompt = llm_prompt.format(question=question, summary=summary)
+      
+      body = json.dumps(
+      {
+          "anthropic_version": "bedrock-2023-05-31",
+          "max_tokens": 1000,
+          "messages": [
+              {
+                  "role": "user",
+                  "content": [
+                      {"type": "text", "text": prompt},
+                  ],
+              }
+          ],
+      })
+          
+      try:
+          response = bedrock.invoke_model(
+          modelId=g.CLAUDE_MODEL_ID,
+          body=body)
+
+          response_body = json.loads(response['body'].read().decode("utf-8"))
+          llm_response = response_body['content'][0]['text'].replace('"', "'")
+          
+      except Exception as e:
+          logger.error(f"exception while slide_text={summary[:10]}, exception={e}")
+          llm_response = None
+
+      return llm_response
+
     # create prompt and convert to embeddings
-    question: str = "As per the AI/ML flywheel, what do the AWS AI/ML services provide?"
-    prompt = prompt_template.format(question=question)
-    text_embeddings = get_text_embeddings(bedrock, question)
+    question: str = "How does Inf2 compare in performance to comparable EC2 instances? I need numbers."
+    text_embedding = get_text_embedding(bedrock, question)
 
     # vector db search
     vector_db_response: Dict = find_similar_data(text_embeddings)
@@ -253,20 +336,17 @@ Once the prerequisite steps are complete and the CloudFormation stack has been c
 
     !aws s3 cp {s3_img_path} .
     local_img_path = os.path.basename(s3_img_path)
-    display(Image(filename=local_img_path))
+    display(filename=local_img_path) 
 
-    # Ask LLaVA
-    data = {
-        "image" : s3_img_path,
-        "question" : prompt,
-        "temperature" : 0.1,
-    }
-    output = predictor.predict(data)
-    logger.info(f"Image={s3_img_path}\nQuestion: {question}\nAnswer: {output}\n\n")
+    # Ask Claude 3 Sonnet
+    slide_text = vector_db_response.get('hits', {}).get('hits')[0].get('_source').get('slide_text')
+
+    llm_response = get_llm_response(bedrock, question, slide_text)
+    print(llm_response)
     ```
 
 ## Results 
-
+-----------------update with results from Claude---------------------------
 Here is a compilation of some user questions and responses generated by our implementation. The Question column captures the user question, and Answer column is the textual response generated by LLaVA. Image is the K-Nearest (`k=1`) slide match returned by the OpenSearch Service Serverless vector search. This slide is interpreted by LLaVA to provide the Answer
 
 |Question                |     Answer    |  Image |
@@ -288,15 +368,13 @@ Note that you can use OpenSearch Dashboards to interact with the OpenSearch API 
 
 To avoid incurring future charges, delete the resources. You can do this by deleting the stack from the CloudFormation console.
 
-![Delete CloudFormation Stack](images/ML-16123-cloudformation-delete-stack.png){#fig-delete-cft} 
-
-Additionally, delete the SageMaker Inference Endpoint created for LLaVA inferencing.  You can do this by uncommenting the cleanup step in [`3_rag_inference.ipynb`](./notebooks/3_rag_inference.ipynb) and run the cell or by deleting the endpoint from the SageMaker console via SageMaker → Inference → Endpoints and then select and delete the Endpoint.  
+![Delete CloudFormation Stack](images/ML-16123-2-cloudformation-delete-stack.png){#fig-delete-cft} 
 
 ## Conclusion
 
-Enterprises generate new content all the time and slide decks are a common mechanism used to share and disseminate information internally with the organization and externally with customers or at conferences. Over time, rich information can remain buried and hidden in non-text modalities like graphs and tables in these slide decks. You can use this solution and the power of multimodal FMs such as Titan MultiModal Embeddings mode and LLaVA to discover new information or uncover new perspectives on content in slide decks. 
+Enterprises generate new content all the time and slide decks are a common mechanism used to share and disseminate information internally with the organization and externally with customers or at conferences. Over time, rich information can remain buried and hidden in non-text modalities like graphs and tables in these slide decks. You can use this solution and the power of multimodal FMs such as Titan Text Embeddings and Claude 3 Sonnet models to discover new information or uncover new perspectives on content in slide decks. 
 
-Look out for two additional blogs as part of this series. Blog 2 will cover another approach you could take to "talk to your slide deck". This approach will generate and store LLaVA inferences and use those stored inferences to respond to user queries. Blog 3 will compare the two approaches.
+This is part 2 of a 3-part series. We used Amazon Titan Multimodal Embeddings and LLaVA models in part 1. Look out for part 3 where we will compare the approaches from part 1 and part 2.
 
 Portions of this code are released under the Apache 2.0 License as referenced here: https://aws.amazon.com/apache-2-0/
 
