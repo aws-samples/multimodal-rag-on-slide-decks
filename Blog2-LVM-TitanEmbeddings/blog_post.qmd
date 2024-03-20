@@ -73,38 +73,36 @@ To implement the solution provided in this post, you should have an [AWS account
 
 This solution uses the Claude 3 Sonnet and Titan Text embeddings models hosted on Amazon Bedrock. Ensure that these models are enabled for use in Amazon Bedrock. In AWS Management Console → Amazon Bedrock, select Model access. If models are enabled, the Access status will state "Access granted" as below.
 
-![Review model access](images/ML-16123-request-model-access.png){#fig-request-model-access}
+![Model access](images/ML-16123-2-request-model-access.png){#fig-request-model-access}
 
 If the models are not available, enable access by clicking on "Manage Model Access", selecting "Titan Embeddings G1 - Text" and "Claude 3 Sonnet" and clicking on Request model access. The models are enabled for use immediately.
 
-![Request model access](images/ML-16123-request-model-access-2.png){#fig-request-model-access-2}
 
 ## Use AWS CloudFormation template to create the solution stack
 
 |AWS Region                |     Link    |
 |:------------------------:|:-----------:|
-|us-east-1  | [<img src="./images/ML-16123-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=multimodal-stack&templateURL=https://aws-blogs-artifacts-public.s3.amazonaws.com/artifacts/ML-16123/template.yml)|
-|us-west-2          | [<img src="./images/ML-16123-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=multimodal-stack&templateURL=https://aws-blogs-artifacts-public.s3.amazonaws.com/artifacts/ML-16123/template.yml) |
+|us-east-1  | [<img src="./images/ML-16123-2-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=multimodal-stack&templateURL=https://aws-blogs-artifacts-public.s3.amazonaws.com/artifacts/ML-16123/template.yml)|
+|us-west-2          | [<img src="./images/ML-16123-2-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=multimodal-stack&templateURL=https://aws-blogs-artifacts-public.s3.amazonaws.com/artifacts/ML-16123/template.yml) |
 
 
-After the stack is created successfully, navigate to the stack's `Outputs` tab on the AWS CloudFormation console and note the values for `MultimodalCollectionEndpoint`, we will use it in the subsequent steps.
+After the stack is created successfully, navigate to the stack's `Outputs` tab on the AWS CloudFormation console and note the values for `MultimodalCollectionEndpoint` and `OpenSearchPipelineEndpoint`, we will use it in the subsequent steps.
 
-![CloudFormation stack outputs](images/ML-16123-cloudformation-outputs.png){#fig-cft-outputs}
+![CloudFormation stack outputs](images/ML-16123-2-cloudformation-outputs.png){#fig-cft-outputs}
 
 The CloudFormation template creates the following resources:
 
 - `IAM roles`: the following two IAM roles are created. Update these roles to apply least-privilege permissions as discussed in [Security best practices](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#grant-least-privilege).
   - `SMExecutionRole` with S3, SageMaker, OpenSearch Service, and Bedrock full access.
-  - `OSPipelineExecutionRole` with access to specific SQS and OSI actions.
+  - `OSPipelineExecutionRole` with access to the S3 bucket and OSI actions.
 - `SageMaker Notebook`: all code for this post is run via this notebook.
 - `OpenSearch Service Serverless collection`: vector database for storing and retrieving embeddings.
 - `OSI Pipeline`: pipeline for ingesting data into OpenSearch Service Serverless.
 - `S3 bucket`: all data for this post is stored in this bucket.
-- `SQS Queue`: events for triggering the OSI pipeline run are put on this queue.
 
 ### OSI pipeline setup
 
-The CloudFormation template sets up the Pipeline configuration required to setup OSI Pipeline with S3-SQS processing as source and OpenSearch Serverless index as sink. Any objects created in the specified S3 bucket and prefix (`multimodal/osi-embeddings-json`) will trigger SQS notifications that will be used by the OSI pipeline to ingest data into OpenSearch Service Serverless. 
+The CloudFormation template sets up the Pipeline configuration required to setup OSI Pipeline with http source and OpenSearch Serverless index as sink. The SageMaker notebook [`2_data_ingestion.ipynb`](./notebooks/2_data_ingestion.ipynb) displays how to ingest data into the pipeline using the [requests](https://pypi.org/project/requests/) HTTP library. 
 
 The CloudFormation template also creates [Network](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/serverless-network.html), [Encryption](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/serverless-encryption.html) and [Data Access](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/serverless-data-access.html) policies required for OpenSearch Serverless Collection. Update these policies to apply least-privilege permissions as discussed in Security best practices.
 
@@ -118,17 +116,11 @@ Once the prerequisite steps are complete and the CloudFormation stack has been c
 
 1. Select the `MultimodalNotebookInstance` and choose **Open JupyterLab**.
 
-    ![SageMaker Notebooks](images/ML-16123-open-jl.png){#fig-open-jl}
+    ![SageMaker Notebooks](images/ML-16123-2-open-jl.png){#fig-open-jl}
 
-1. In `File Browser`, traverse to the notebooks folder to see notebooks and supporting files. The notebooks are numbered in sequence of execution. Instructions and comments in each notebook describe the actions performed by that notebook. We will run these notebook one by one.
+1. In `File Browser`, traverse to the notebooks folder to see notebooks and supporting files. The notebooks are numbered in sequence of execution. Instructions and comments in each notebook describe the actions performed by that notebook. We will run these notebooks one by one.
 
-1. Choose [`0_deploy_llava.ipynb`](./notebooks/0_deploy_llava.ipynb) to open it in JupyterLab. When the notebook is open, on the Run menu, choose **Run All Cells** to run the code in this notebook. This notebook will deploy the LLaVA-v1.5-7B model to a SageMaker endpoint.
-
-    - In this notebook we download the LLaVA-v1.5-7B model from HuggingFace Hub, replace the `inference.py` script with [`llava_inference.py`](./notebooks/llava_inference.py) and create a `model.tar.gz` file for this model.
-
-    - The `model.tar.gz` file is uploaded to S3 and used for deploying the model on SageMaker endpoint. The [`llava_inference.py`](./notebooks/llava_inference.py) has additional code to allow reading an image file from S3 and run inference on it.
-
-1. Next Choose [`1_data_prep.ipynb`](./notebooks/1_data_prep.ipynb) to open it in JupyterLab. When the notebook is open, on the Run menu, choose **Run All Cells** to run the code in this notebook. This notebook will download a publicly available [slide deck]((https://d1.awsstatic.com/events/Summits/torsummit2023/CMP301_TrainDeploy_E1_20230607_SPEdited.pdf)) and convert each slide into the JPG file format and upload these to the S3 bucket for this blog.
+1. Choose [`1_data_prep.ipynb`](./notebooks/1_data_prep.ipynb) to open it in JupyterLab. When the notebook is open, on the Run menu, choose **Run All Cells** to run the code in this notebook. This notebook will download a publicly available [slide deck]((https://d1.awsstatic.com/events/Summits/torsummit2023/CMP301_TrainDeploy_E1_20230607_SPEdited.pdf)) and convert each slide into the JPG file format and upload these to the S3 bucket for this blog.
 
 1. Next Choose [`2_data_ingestion.ipynb`](./notebooks/2_data_ingestion.ipynb) to open it in JupyterLab. When the notebook is open, on the Run menu, choose **Run All Cells** to run the code in this notebook. We do the following in this notebook:
 
