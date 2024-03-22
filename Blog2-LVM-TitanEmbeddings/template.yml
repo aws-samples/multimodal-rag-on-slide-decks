@@ -13,9 +13,9 @@ Metadata:
           - NetworkPolicyName
     ParameterLabels:      
       OSCollectionName:
-        default: OpenSearch vector index name
-      OSIndexName:
         default: OpenSearch collection name
+      OSIndexName:
+        default: OpenSearch vector index name
       BucketName:
         default: Bucket used to store data
       NetworkPolicyName:
