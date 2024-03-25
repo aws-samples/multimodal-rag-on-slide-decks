@@ -1,6 +1,4 @@
-# Talk to your slide deck (Multimodal RAG) using foundation models (FMs)
-hosted on Amazon Bedrock – Part 2
-
+# Talk to your slide deck (Multimodal RAG) using foundation models (FMs) hosted on Amazon Bedrock – Part 2
 
 *Amit Arora*, *Archana Inapudi*, *Manju Prasad*, *Antara Raisa*
 
