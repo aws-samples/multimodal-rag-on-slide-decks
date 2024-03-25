@@ -6,7 +6,6 @@ import boto3
 import sagemaker
 
 # model deployment
-HF_MODEL_ID = "anymodality/llava-v1.5-13b"
 HF_MODEL_ID: str = "anymodality/llava-v1.5-7b"
 
 HF_TASK: str = "question-answering"
