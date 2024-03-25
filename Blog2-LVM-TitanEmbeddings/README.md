@@ -1,153 +1,136 @@
-Part 2: Talk to your slide deck (Multimodal RAG) using foundation models
-(FMs) hosted on Amazon Bedrock
-================
+# Talk to your slide deck (Multimodal RAG) using foundation models (FMs)
+hosted on Amazon Bedrock – Part 2
+
 
 *Amit Arora*, *Archana Inapudi*, *Manju Prasad*, *Antara Raisa*
 
-In Part 1 of this series, we drafted an architecture for Multimodal RAG
-where we converted individual slides from a slide deck into embeddings
-using the [Amazon Titan Multimodal
+In [part
+1](https://aws.amazon.com/blogs/machine-learning/talk-to-your-slide-deck-using-multimodal-foundation-models-hosted-on-amazon-bedrock-and-amazon-sagemaker-part-1/)
+of this series, we presented a solution that used [Amazon Titan
+Multimodal
 Embeddings](https://docs.aws.amazon.com/bedrock/latest/userguide/titan-multiemb-models.html)
-model that were stored in a vector database and then had the [Large
-Language-and-Vision Assistant (LLaVA)](https://llava-vl.github.io/)
-model generate text responses to user questions based on the most
-similar slide retrieved from the vector database.
+model to convert individual slides from a slide deck into embeddings. We
+stored the embeddings in a vector database and then used the [Large
+Language-and-Vision Assistant (LLaVA
+1.5-7b)](https://llava-vl.github.io/) model to generate text responses
+to user questions based on the most similar slide retrieved from the
+vector database. We used AWS services including [Amazon
+Bedrock](https://aws.amazon.com/bedrock/), [Amazon
+SageMaker](https://aws.amazon.com/sagemaker/), and [Amazon OpenSearch
+Serverless](https://aws.amazon.com/opensearch-service/features/serverless/)
+in this solution.
 
-In Part 2 of this series we demonstrate a different approach where we
-have the [Anthropic Claude 3 Sonnet]() model first generate text
-descriptions for each slide in the slide deck, these descriptions are
-converted into text embeddings using [Amazon Titan Text
-Embeddings](https://docs.aws.amazon.com/bedrock/latest/userguide/titan-embedding-models.html)
-model and stored in a vector database and then we again use the
+In part 2 of this series, we demonstrate a different approach. We use
 [Anthropic Claude 3 Sonnet](https://aws.amazon.com/bedrock/claude/)
-model to generate an answer to the user question based on the most
-relevant text description retrieved from the vector database.
+model to generate text descriptions for each slide in the slide deck.
+These descriptions are then converted into text embeddings using [Amazon
+Titan Text
+Embeddings](https://docs.aws.amazon.com/bedrock/latest/userguide/titan-embedding-models.html)
+model and stored in a vector database. Then we use the Claude 3 Sonnet
+model to generate answers to user questions based on the most relevant
+text description retrieved from the vector database.
 
 You can test both approches for your dataset and evaluate the results to
 see which approach gives you the best results. Evaluation of the results
-is a topic that we explore in PArt 3 of this series.
+is a topic that we will explore in part 3 of this series.
 
 ## Solution overview
 
 The solution presented provides an implementation for answering
-questions using information contained in the text and visual elements of
-a slide deck. The design relies on the concept of Retrieval Augmented
+questions using information contained in text and visual elements of a
+slide deck. The design relies on the concept of Retrieval Augmented
 Generation (RAG). Traditionally, RAG has been associated with textual
-data that can be processed by LLMs. In this blog, we extend RAG to
+data that can be processed by LLMs. In this series, we extend RAG to
 include images as well. This provides a powerful search capability to
 extract contextually relevant content from visual elements like tables
 and graphs along with text.
 
-There are different ways to design a RAG solution that includes images.
-We have presented one approach here and will follow-up with an alternate
-approach in the second blog of this three-part blog series.
-
 This solution includes the following components:
 
-- [Amazon Titan Multimodal
-  Embeddings](https://docs.aws.amazon.com/bedrock/latest/userguide/titan-multiemb-models.html)
-  model: this FM is used to generate embeddings for the content in the
-  slide deck used in this blog. As a multimodal model, this Titan model
-  can process text, image or a combination as input and generate
-  embeddings. The Titan Multimodal Embeddings model generates vectors
-  (embeddings) of dimension 1024 and is accessed via the Amazon Bedrock
-  service.
-- [Anthropic Claude 3 Sonnet]()
-- [Amazon OpenSearch Service
-  Serverless](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/serverless-overview.html):
-  OpenSearch Service Serverless is an on-demand serverless configuration
-  for Amazon OpenSearch Service. We use OpenSearch Service Serverless as
-  a vector database for storing embeddings generated by the Titan
-  Multimodal Embeddings model. An index created in the OpenSearch
-  Service Serverless collection serves as the vector store for our RAG
-  solution.
+- **Amazon Titan Text Embeddings** is a text embeddings model that
+  converts natural language text including single words, phrases, or
+  even large documents, into numerical representations that can be used
+  to power use cases such as search, personalization, and clustering
+  based on semantic similarity.
+- **Anthropic Claude 3 Sonnet** is the next generation of
+  state-of-the-art models from Anthropic. Sonnet is a versatile tool
+  that can handle a wide range of tasks, from complex reasoning and
+  analysis to rapid outputs, as well as efficient search and retrieval
+  across vast amounts of information.
+- **Amazon OpenSearch Service Serverless** is an on-demand serverless
+  configuration for Amazon OpenSearch Service. We use OpenSearch Service
+  Serverless as a vector database for storing embeddings generated by
+  the Titan Multimodal Embeddings model. An index created in the
+  OpenSearch Service Serverless collection serves as the vector store
+  for our RAG solution.
 - [Amazon OpenSearch
   Ingestion](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/ingestion.html)
-  (OSI): OSI is a fully managed, serverless data collector that delivers
-  data to Amazon OpenSearch Service domains and OpenSearch Serverless
-  collections. In this blog, we are using an OSI pipeline to deliver
-  data to the OpenSearch Serverless vector store.
+  (OSI) is a fully managed, serverless data collector that delivers data
+  to Amazon OpenSearch Service domains and OpenSearch Serverless
+  collections. In this blog, we use an OSI pipeline API to deliver data
+  to the OpenSearch Serverless vector store.
 
 ## Solution design
 
 The solution design consists of two parts - Ingestion and User
 interaction. During ingestion, we process the input slide deck by
-converting each slide into an image, generate embeddings for these
-images and then populate the vector data store. These steps are
+converting each slide into an image, generating descriptions and text
+embeddings for each image. We then populate the vector data store with
+the embeddings and text description for each slide. These steps are
 completed prior to the user interaction steps.
 
 In the User interaction phase, a question from the user is converted
-into embeddings and a similarity search is run on the vector database to
-find a slide that could potentially contain answers to user question. We
-then provide this slide (in the form of an image file) to the LLaVA
-model and the user question as a prompt to generate an answer to the
-query. All the code for this post is available in the
-[GitHub](https://github.com/aws-samples/multimodal-rag-on-slide-decks/tree/main/Blog1-TitanEmbeddings-LVM)
+into text embeddings. A similarity search is run on the vector database
+to find a text description corresponding to a slide that could
+potentially contain answers to the user question. We then provide the
+slide description and the user question to the Claude 3 Sonnet model to
+generate an answer to the query. All the code for this post is available
+in the
+[GitHub](https://github.com/aws-samples/multimodal-rag-on-slide-decks/tree/main/Blog2-LVM-TitanEmbeddings)
 repo.
 
 ### Ingestion steps:
 
-<figure>
-<img src="images/ML-16123-ingestion-design.jpg"
-id="fig-ingestion-design" alt="Figure 1: Ingestion architecture" />
-<figcaption aria-hidden="true">Figure 1: Ingestion
-architecture</figcaption>
-</figure>
+![](images/ML-16123-2-ingestion-design.png)
 
-1.  Slides are converted to image files (one per slide) in the JPG
-    format and passed to the Titan Multimodal Embeddings model to
-    generate embeddings. In our blog, we use this slide deck titled
-    [Train and deploy Stable Diffusion using AWS Trainium & AWS
-    Inferentia](https://d1.awsstatic.com/events/Summits/torsummit2023/CMP301_TrainDeploy_E1_20230607_SPEdited.pdf)
-    from the AWS Summit in Toronto, June 2023 to demonstrate the
-    solution.
+1.  1.  Slides are converted to image files (one per slide) in the JPG
+        format and passed to Claude 3 Sonnet model to generate text
+        description and then to Titan Text Embeddings model to generate
+        embeddings. In this series, we use slide deck titled [Train and
+        deploy Stable Diffusion using AWS Trainium & AWS
+        Inferentia](https://d1.awsstatic.com/events/Summits/torsummit2023/CMP301_TrainDeploy_E1_20230607_SPEdited.pdf)
+        from the AWS Summit in Toronto, June 2023 to demonstrate the
+        solution.
 
     - The sample deck has 31 slides and thus we generate 31 sets of
-      vector embeddings, each with 1024 dimensions. We add additional
-      metadata fields to these generated vector embeddings and create a
-      JSON file. These additional metadata fields can be used to perform
-      rich search queries using OpenSearch’s powerful search
-      capabilities.
+      vector embeddings, each with 1536 dimensions. We add additional
+      metadata fields to perform rich search queries using OpenSearch’s
+      powerful search capabilities.
 
-2.  The generated embeddings are put together in a single JSON file that
-    is uploaded to Amazon S3
-
-3.  Via S3 Event Notification, an event is put on the Amazon Simple
-    Queue Service (SQS) queue.
-
-4.  This event on the SQS queue acts as a trigger to run the OSI
-    pipeline which in turn ingests the data (JSON file) as documents
-    into the OpenSearch Service Serverless index.
-
+2.  The embeddings are ingested into OSI pipeline via an API call, the
+    OSI pipeline in turn ingests the data as documents into the
+    OpenSearch Service Serverless index.
     - Note that the OpenSearch Service Serverless index is configured as
       the sink for this pipeline and it is created as part of the
       OpenSearch Service Serverless collection.
 
 ### User interaction steps:
 
-<figure>
-<img src="images/ML-16123-user-interaction-design.jpg"
-id="fig-ingestion-design"
-alt="Figure 2: User interaction architecture" />
-<figcaption aria-hidden="true">Figure 2: User interaction
-architecture</figcaption>
-</figure>
+![](images/ML-16123-2-user-interaction-design.png)
 
 1.  A user submits a question related to the slide deck that has been
     ingested.
-2.  The user input is converted into embeddings using the Titan
-    Multimodal Embeddings model accessed via Bedrock. An OpenSearch
-    vector search is performed using these embeddings. We perform a
-    K-Nearest Neighbor (`k=1`) search to retrieve the most relevant
-    embedding matching the user query. Setting `k=1` retrieves the most
-    relevant slide to the user question.
+2.  The user input is converted into embeddings using the Titan Text
+    Embeddings model accessed via Bedrock. An OpenSearch vector search
+    is performed using these embeddings. We perform a K-Nearest Neighbor
+    search to retrieve the most relevant embedding matching the user
+    query.
 3.  The metadata of the response from OpenSearch Services Serverless
-    contains a path to the image corresponding to the most relevant
-    slide.
+    contains a path to the image and description corresponding to the
+    most relevant slide.
 4.  A prompt is created by combining the user question and the image
-    path and provided to LLaVA hosted on SageMaker. The LLaVA model is
-    able to understand the user question and answer it by examining the
-    data in the image.
+    description. The prompt is provided to Claude 3 Sonnet hosted on
+    Bedrock.
 5.  Result of this inference is returned to the user.
 
 These steps are discussed in detail in the following sections. See
@@ -157,52 +140,37 @@ Results section for screenshots and details on the output.
 
 To implement the solution provided in this post, you should have an [AWS
 account](https://signin.aws.amazon.com/signin?redirect_uri=https%3A%2F%2Fportal.aws.amazon.com%2Fbilling%2Fsignup%2Fresume&client_id=signup)
-and familarity with FMs, Bedrock, SageMaker and OpenSearch Service.
+and familarity with FMs, Bedrock, SageMaker, and OpenSearch Service.
 
-This solution uses the Titan multimodal embeddings model. Ensure that
-this model is enabled for use in Amazon Bedrock. In AWS Management
-Console → Amazon Bedrock, select Model access. If Titan Multimodal
-Embeddings is enabled, the Access status will state “Access granted” as
-below.
+This solution uses the Claude 3 Sonnet and Titan Text embeddings models
+hosted on Amazon Bedrock. Ensure that these models are enabled for use
+in Amazon Bedrock. In AWS Management Console → Amazon Bedrock, select
+Model access. If models are enabled, the Access status will state
+“Access granted” as below.
 
-<figure>
-<img src="images/ML-16123-request-model-access.png"
-id="fig-request-model-access"
-alt="Figure 3: User interaction architecture" />
-<figcaption aria-hidden="true">Figure 3: User interaction
-architecture</figcaption>
-</figure>
+![](images/ML-16123-2-request-model-access.png)
 
-If the model is not available, enable access to the model by clicking on
-“Manage Model Access”, selecting “Titan Multimodal Embeddings G1” and
-clicking on Request model access. The model is enabled for use
-immediately.
-
-<figure>
-<img src="images/ML-16123-request-model-access-2.png"
-id="fig-request-model-access-2"
-alt="Figure 4: User interaction architecture" />
-<figcaption aria-hidden="true">Figure 4: User interaction
-architecture</figcaption>
-</figure>
+If the models are not available, enable access by clicking on “Manage
+Model Access”, selecting “Titan Embeddings G1 - Text” and “Claude 3
+Sonnet” and clicking on Request model access. The models are enabled for
+use immediately.
 
 ## Use AWS CloudFormation template to create the solution stack
 
-| AWS Region |                                                                                                                                    Link                                                                                                                                     |
-|:----------:|:---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| us-east-1  | [<img src="./images/ML-16123-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=multimodal-stack&templateURL=https://aws-blogs-artifacts-public.s3.amazonaws.com/artifacts/ML-16123/template.yml) |
-| us-west-2  | [<img src="./images/ML-16123-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=multimodal-stack&templateURL=https://aws-blogs-artifacts-public.s3.amazonaws.com/artifacts/ML-16123/template.yml) |
+<i>Note: If you have created the solution for Part 1 in the same AWS
+account, be sure to delete that before creating this solution stack.</i>
+
+| AWS Region |                                                                                                                                         Link                                                                                                                                          |
+|:----------:|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| us-east-1  | [<img src="./images/ML-16123-2-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=multimodal-blog2-stack&templateURL=https://aws-blogs-artifacts-public.s3.amazonaws.com/artifacts/ML-16123-2/template.yml) |
+| us-west-2  | [<img src="./images/ML-16123-2-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=multimodal-blog2-stack&templateURL=https://aws-blogs-artifacts-public.s3.amazonaws.com/artifacts/ML-16123-2/template.yml) |
 
 After the stack is created successfully, navigate to the stack’s
 `Outputs` tab on the AWS CloudFormation console and note the values for
-`MultimodalCollectionEndpoint`, we will use it in the subsequent steps.
+`MultimodalCollectionEndpoint` and `OpenSearchPipelineEndpoint`, we will
+use it in the subsequent steps.
 
-<figure>
-<img src="images/ML-16123-cloudformation-outputs.png"
-id="fig-cft-outputs" alt="Figure 5: CloudFormation stack outputs" />
-<figcaption aria-hidden="true">Figure 5: CloudFormation stack
-outputs</figcaption>
-</figure>
+![](images/ML-16123-2-cloudformation-outputs.png)
 
 The CloudFormation template creates the following resources:
 
@@ -212,7 +180,7 @@ The CloudFormation template creates the following resources:
   practices](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#grant-least-privilege).
   - `SMExecutionRole` with S3, SageMaker, OpenSearch Service, and
     Bedrock full access.
-  - `OSPipelineExecutionRole` with access to specific SQS and OSI
+  - `OSPipelineExecutionRole` with access to the S3 bucket and OSI
     actions.
 - `SageMaker Notebook`: all code for this post is run via this notebook.
 - `OpenSearch Service Serverless collection`: vector database for
@@ -220,17 +188,15 @@ The CloudFormation template creates the following resources:
 - `OSI Pipeline`: pipeline for ingesting data into OpenSearch Service
   Serverless.
 - `S3 bucket`: all data for this post is stored in this bucket.
-- `SQS Queue`: events for triggering the OSI pipeline run are put on
-  this queue.
 
 ### OSI pipeline setup
 
 The CloudFormation template sets up the Pipeline configuration required
-to setup OSI Pipeline with S3-SQS processing as source and OpenSearch
-Serverless index as sink. Any objects created in the specified S3 bucket
-and prefix (`multimodal/osi-embeddings-json`) will trigger SQS
-notifications that will be used by the OSI pipeline to ingest data into
-OpenSearch Service Serverless.
+to setup OSI Pipeline with http source and OpenSearch Serverless index
+as sink. The SageMaker notebook
+[`2_data_ingestion.ipynb`](./notebooks/2_data_ingestion.ipynb) displays
+how to ingest data into the pipeline using the
+[requests](https://pypi.org/project/requests/) HTTP library.
 
 The CloudFormation template also creates
 [Network](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/serverless-network.html),
@@ -259,45 +225,23 @@ slide deck” implementation:
 2.  Select the `MultimodalNotebookInstance` and choose **Open
     JupyterLab**.
 
-    <figure>
-    <img src="images/ML-16123-open-jl.png" id="fig-open-jl"
-    alt="Figure 6: SageMaker Notebooks" />
-    <figcaption aria-hidden="true">Figure 6: SageMaker
-    Notebooks</figcaption>
-    </figure>
+    ![](images/ML-16123-2-open-jl.png)
 
 3.  In `File Browser`, traverse to the notebooks folder to see notebooks
     and supporting files. The notebooks are numbered in sequence of
     execution. Instructions and comments in each notebook describe the
-    actions performed by that notebook. We will run these notebook one
+    actions performed by that notebook. We will run these notebooks one
     by one.
 
-4.  Choose [`0_deploy_llava.ipynb`](./notebooks/0_deploy_llava.ipynb) to
-    open it in JupyterLab. When the notebook is open, on the Run menu,
-    choose **Run All Cells** to run the code in this notebook. This
-    notebook will deploy the LLaVA-v1.5-7B model to a SageMaker
-    endpoint.
-
-    - In this notebook we download the LLaVA-v1.5-7B model from
-      HuggingFace Hub, replace the `inference.py` script with
-      [`llava_inference.py`](./notebooks/llava_inference.py) and create
-      a `model.tar.gz` file for this model.
-
-    - The `model.tar.gz` file is uploaded to S3 and used for deploying
-      the model on SageMaker endpoint. The
-      [`llava_inference.py`](./notebooks/llava_inference.py) has
-      additional code to allow reading an image file from S3 and run
-      inference on it.
-
-5.  Next Choose [`1_data_prep.ipynb`](./notebooks/1_data_prep.ipynb) to
-    open it in JupyterLab. When the notebook is open, on the Run menu,
-    choose **Run All Cells** to run the code in this notebook. This
-    notebook will download a publicly available [slide
+4.  Choose [`1_data_prep.ipynb`](./notebooks/1_data_prep.ipynb) to open
+    it in JupyterLab. When the notebook is open, on the Run menu, choose
+    **Run All Cells** to run the code in this notebook. This notebook
+    will download a publicly available [slide
     deck]((https://d1.awsstatic.com/events/Summits/torsummit2023/CMP301_TrainDeploy_E1_20230607_SPEdited.pdf))
     and convert each slide into the JPG file format and upload these to
     the S3 bucket for this blog.
 
-6.  Next Choose
+5.  Next Choose
     [`2_data_ingestion.ipynb`](./notebooks/2_data_ingestion.ipynb) to
     open it in JupyterLab. When the notebook is open, on the Run menu,
     choose **Run All Cells** to run the code in this notebook. We do the
@@ -323,36 +267,40 @@ slide deck” implementation:
     index_body = """
     {
       "settings": {
-          "index.knn": true
+        "index.knn": true
       },
       "mappings": {
-          "properties": {
-              "vector_embedding": {
-                  "type": "knn_vector",
-                  "dimension": 1024,
-                  "method": {
-                      "name": "hnsw",
-                      "engine": "nmslib",
-                      "parameters": {}
-                  }
-              },
-              "image_path": {
+        "properties": {
+          "vector_embedding": {
+            "type": "knn_vector",
+            "dimension": 1536,
+            "method": {
+              "name": "hnsw",
+              "engine": "nmslib",
+              "parameters": {}
+            }
+          },
+          "image_path": {
+            "type": "text"
+          },
+          "slide_text": {
+            "type": "text"
+          },
+          "slide_number": {
+            "type": "text"
+          },
+          "metadata": { 
+            "properties" :
+              {
+                "filename" : {
+                  "type" : "text"
+                },
+                "desc":{
                   "type": "text"
-              },
-              "metadata": {
-                  "properties": {
-                      "slide_filename": {
-                          "type": "text"
-                      },
-                      "model_id": {
-                          "type": "text"
-                      },
-                      "slide_description": {
-                          "type": "text"
-                      }
-                  }
+                }
               }
           }
+        }
       }
     }
     """
@@ -364,84 +312,164 @@ slide deck” implementation:
       logger.error(f"error in creating index={index_name}, exception={e}")
     ```
 
-    - We use Titan Multimodal Embeddings model to convert the JPG images
-      created in the previous notebook into vector embeddings. These
-      embeddings and additional metadata (such as the S3 path of the
-      image file) are stored in a JSON file and uploaded to S3. Note
-      that a single JSON file is created which contains documents for
-      all the slides (images) converted into embeddings. The following
-      code snippet shows how an image (in the form of a Base64 encoded
-      string) is converted into embeddings.
+    - We use Claude 3 Sonnet and Titan Text Embeddings models to convert
+      the JPG images created in the previous notebook into vector
+      embeddings. These embeddings and additional metadata (such as the
+      S3 path and description of the image file) are stored in the index
+      along with the embeddings. The following code snippet shows how
+      Claude 3 Sonnet generates image descriptions.
 
     ``` python
-    def get_multimodal_embeddings(bedrock: botocore.client, image: str) -> np.ndarray:
-        body = json.dumps(dict(inputImage=image))
-        try:
-            response = bedrock.invoke_model(
-                body=body, modelId=g.FMC_MODEL_ID, accept=g.ACCEPT_ENCODING, contentType=g.CONTENT_ENCODING
-            )
-            response_body = json.loads(response.get("body").read())
-            embeddings = np.array([response_body.get("embedding")]).astype(np.float32)
-        except Exception as e:
-            logger.error(f"exception while image(truncated)={image[:10]}, exception={e}")
-            embeddings = None
+    def get_img_desc(image_file_path: str, prompt: str):
+    # read the file, MAX image size supported is 2048 * 2048 pixels
+    with open(image_file_path, "rb") as image_file:
+        input_image_b64 = image_file.read().decode('utf-8')
 
-        return embeddings
+    body = json.dumps(
+        {
+            "anthropic_version": "bedrock-2023-05-31",
+            "max_tokens": 1000,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": "image/jpeg",
+                                "data": input_image_b64
+                            },
+                        },
+                        {"type": "text", "text": prompt},
+                    ],
+                }
+            ],
+        }
+    )
+
+    response = bedrock.invoke_model(
+        modelId=g.CLAUDE_MODEL_ID,
+        body=body
+    )
+
+    resp_body = json.loads(response['body'].read().decode("utf-8"))
+    resp_text = resp_body['content'][0]['text'].replace('"', "'")
+
+    return resp_text
     ```
 
-    - This action triggers the OpenSearch Ingestion pipeline ingest
-      process that processes the file and ingests into the OpenSearch
-      Service Serverless Index. Here is a sample of the JSON file
-      created (a vector with 4 dimensions is shown below. Titan
-      Multimodal Embeddings model generates 1024 dimensions).
+    - The image descriptions are passed to Titan Text Embeddings model
+      to generate vector embeddings. These embeddings and additional
+      metadata (such as the S3 path and description of the image file)
+      are stored in the index along with the embeddings. The following
+      code snippet shows the call to Titan Text Embeddings model.
 
     ``` python
-    [
-      {
-        "image_path": "s3://<your-bucket-name>/path/to/file1.json",
+    def get_text_embedding(bedrock: botocore.client, prompt_data: str) -> np.ndarray:
+    body = json.dumps({
+        "inputText": prompt_data,
+    })    
+    try:
+        response = bedrock.invoke_model(
+            body=body, modelId=g.TITAN_MODEL_ID, accept=g.ACCEPT_ENCODING, contentType=g.CONTENT_ENCODING
+        )
+        response_body = json.loads(response['body'].read())
+        embedding = response_body.get('embedding')
+    except Exception as e:
+        logger.error(f"exception={e}")
+        embedding = None
+
+    return embedding
+    ```
+
+    - The data is ingested into OpenSearch Service Serverless Index by
+      making an API call to the OpenSearch Ingestion pipeline. The
+      following code snippet shows the call made via the requests HTTP
+      library.
+
+    ``` python
+    data = json.dumps([{
+        "image_path": input_image_s3, 
+        "slide_text": resp_text, 
+        "slide_number": slide_number, 
         "metadata": {
-          "slide_filename": "mypowerpoint1.pptx",
-          "model_id": "amazon.titan-embed-image-v1",
-          "slide_description": "This is a test slide deck"
-        },
-        "vector_embedding": [
-          657.6052386529958,
-          0.8865137233123771,
-          763.870264592026,
-          ...
-        ]
-      }
-      ...
-    ] 
+            "filename": obj_name, 
+            "desc": "" 
+        }, 
+        "vector_embedding": embedding
+    }])
+
+    r = requests.request(
+        method='POST', 
+        url=osi_endpoint, 
+        data=data,
+        auth=AWSSigV4('osis'))
     ```
 
-7.  Next Choose
+6.  Next Choose
     [`3_rag_inference.ipynb`](./notebooks/3_rag_inference.ipynb) to open
     it in JupyterLab. When the notebook is open, on the Run menu, choose
     **Run All Cells** to run the code in this notebook. This notebook
     implements the RAG solution: we convert the user question into
-    embeddings, find a similar image (slide) from the vector database
-    and then provide the retrieved image to LLaVA to generate an answer
-    to the user question.
+    embeddings, find a similar image description from the vector
+    database and then provide the retrieved description to Claude 3
+    Sonnet to generate an answer to the user question.
 
     - We use the following prompt template.
 
     ``` python
-    prompt_template: str = """Pretend that you are a helpful assistant that answers questions about content in a slide deck. 
-      Using only the information in the provided slide image answer the following question.
-      If you do not find the answer in the image then say I did not find the answer to this question in the slide deck.
+      llm_prompt: str = """
 
+      Human: Use the summary to provide a concise answer to the question to the best of your abilities. If you cannot answer the question from the context then say I do not know, do not make up an answer.
+      <question>
       {question}
-    """
+      </question>
+
+      <summary>
+      {summary}
+      </summary>
+
+      Assistant:"""
     ```
 
     - The following code snippet provides the RAG workflow.
 
     ``` python
+    def get_llm_response(bedrock: botocore.client, question: str, summary: str) -> str:
+      prompt = llm_prompt.format(question=question, summary=summary)
+
+      body = json.dumps(
+      {
+          "anthropic_version": "bedrock-2023-05-31",
+          "max_tokens": 1000,
+          "messages": [
+              {
+                  "role": "user",
+                  "content": [
+                      {"type": "text", "text": prompt},
+                  ],
+              }
+          ],
+      })
+
+      try:
+          response = bedrock.invoke_model(
+          modelId=g.CLAUDE_MODEL_ID,
+          body=body)
+
+          response_body = json.loads(response['body'].read().decode("utf-8"))
+          llm_response = response_body['content'][0]['text'].replace('"', "'")
+
+      except Exception as e:
+          logger.error(f"exception while slide_text={summary[:10]}, exception={e}")
+          llm_response = None
+
+      return llm_response
+
     # create prompt and convert to embeddings
-    question: str = "As per the AI/ML flywheel, what do the AWS AI/ML services provide?"
-    prompt = prompt_template.format(question=question)
-    text_embeddings = get_text_embeddings(bedrock, question)
+    question: str = "How does Inf2 compare in performance to comparable EC2 instances? I need numbers."
+    text_embedding = get_text_embedding(bedrock, question)
 
     # vector db search
     vector_db_response: Dict = find_similar_data(text_embeddings)
@@ -452,33 +480,30 @@ slide deck” implementation:
 
     !aws s3 cp {s3_img_path} .
     local_img_path = os.path.basename(s3_img_path)
-    display(Image(filename=local_img_path))
+    display(filename=local_img_path) 
 
-    # Ask LLaVA
-    data = {
-        "image" : s3_img_path,
-        "question" : prompt,
-        "temperature" : 0.1,
-    }
-    output = predictor.predict(data)
-    logger.info(f"Image={s3_img_path}\nQuestion: {question}\nAnswer: {output}\n\n")
+    # Ask Claude 3 Sonnet
+    slide_text = vector_db_response.get('hits', {}).get('hits')[0].get('_source').get('slide_text')
+
+    llm_response = get_llm_response(bedrock, question, slide_text)
+    print(llm_response)
     ```
 
 ## Results
 
 Here is a compilation of some user questions and responses generated by
 our implementation. The Question column captures the user question, and
-Answer column is the textual response generated by LLaVA. Image is the
-K-Nearest (`k=1`) slide match returned by the OpenSearch Service
-Serverless vector search. This slide is interpreted by LLaVA to provide
-the Answer
+Answer column is the textual response generated by Claude 3 Sonnet.
+Image is the K-Nearest slide match returned by the OpenSearch Service
+Serverless vector search. This slide is interpreted by Claude 3 Sonnet
+to provide the Answer
 
-| Question                                                                                                                                     | Answer                                                                                                                                                                                     | Image                              |
-|----------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------|
-| How does Inf2 compare in performance to comparable EC2 instances? I need numbers.                                                            | According to the slide deck, Inf2 instances by AWS Inferentia2 offer up to 4x higher throughput and 10x lower latency compared to comparable EC2 instances.                                | ![](./images/ML-16123-slide-1.png) |
-| As per the AI/ML flywheel, what do the AWS AI/ML services provide?                                                                           | The AWS AI/ML services provide better \$/perfer capabilities, new capabilities, and investment in innovation.                                                                              | ![](./images/ML-16123-slide-2.png) |
-| Compared to GPT-2, how many more parameters does GPT-3 have? What is the numerical difference between the parameter size of GPT-2 and GPT-3? | According to the slide, GPT-3 has 175 billion parameters, while GPT-2 has 1.5 billion parameters. The numerical difference between the parameter size of GPT-2 and GPT-3 is 173.5 billion. | ![](./images/ML-16123-slide-3.png) |
-| What are quarks in particle physics?                                                                                                         | I did not find the answer to this question in the slide deck.                                                                                                                              | ![](./images/ML-16123-slide-4.png) |
+| Question                                                                                                                                     | Answer                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Image                                |
+|----------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------|
+| How does Inf2 compare in performance to comparable EC2 instances? I need numbers.                                                            | Based on the information provided in the summary, the key performance comparison numbers given for the Amazon EC2 Inf2 instances compared to other instances are: 1. Up to 4x higher throughput. 2. Up to 10x lower latency. The summary does not provide specific numbers comparing the Inf2 instances to other EC2 instance types. However, it highlights the throughput and latency improvements as the main performance advantages of the Inf2 instances over comparable instances for running generative AI models.                                                                                              | ![](./images/ML-16123-2-slide-1.png) |
+| As per the AI/ML flywheel, what do the AWS AI/ML services provide?                                                                           | Based on the summary, the AWS AI/ML services provide a range of capabilities that fuel an AI/ML flywheel. This flywheel consists of innovation in developing new and better algorithms, enabling more use-cases and applications, driving wider adoption and demand, which in turn leads to further investment in research and optimization to drive more innovation. The AWS AI/ML services seem to offer the tools, resources, and infrastructure to support this continuous cycle of innovation, application development, adoption, and reinvestment in the field of artificial intelligence and machine learning. | ![](./images/ML-16123-2-slide-2.png) |
+| Compared to GPT-2, how many more parameters does GPT-3 have? What is the numerical difference between the parameter size of GPT-2 and GPT-3? | According to the information provided in the summary, GPT-3 from 2020 had 175B (175 billion) parameters, while GPT-2 from 2019 had 1.5B (1.5 billion) parameters. Therefore, the numerical difference between the parameter size of GPT-2 and GPT-3 is 173.5 billion parameters. GPT-3 has approximately 115 times more parameters than GPT-2.                                                                                                                                                                                                                                                                        | ![](./images/ML-16123-2-slide-3.png) |
+| What are quarks in particle physics?                                                                                                         | Unfortunately, the given summary does not contain any information about quarks in particle physics. The summary describes an image related to the progression of natural language processing and generative AI technologies, but it does not mention anything about particle physics or the concept of quarks.                                                                                                                                                                                                                                                                                                        | ![](./images/ML-16123-2-slide-4.png) |
 
 Multimodal RAG results
 
@@ -487,31 +512,14 @@ Multimodal RAG results
 Note that you can use OpenSearch Dashboards to interact with the
 OpenSearch API to run quick tests on your index and ingested data.
 
-<figure>
-<img src="images/ML-os-1.png" id="fig-os-1"
-alt="Figure 7: OpenSearch dashboard GET example" />
-<figcaption aria-hidden="true">Figure 7: OpenSearch dashboard GET
-example</figcaption>
-</figure>
+![](images/ML-os-1.png)
 
 ## Cleanup
 
 To avoid incurring future charges, delete the resources. You can do this
 by deleting the stack from the CloudFormation console.
 
-<figure>
-<img src="images/ML-16123-cloudformation-delete-stack.png"
-id="fig-delete-cft" alt="Figure 8: Delete CloudFormation Stack" />
-<figcaption aria-hidden="true">Figure 8: Delete CloudFormation
-Stack</figcaption>
-</figure>
-
-Additionally, delete the SageMaker Inference Endpoint created for LLaVA
-inferencing. You can do this by uncommenting the cleanup step in
-[`3_rag_inference.ipynb`](./notebooks/3_rag_inference.ipynb) and run the
-cell or by deleting the endpoint from the SageMaker console via
-SageMaker → Inference → Endpoints and then select and delete the
-Endpoint.
+![](images/ML-16123-2-cloudformation-delete-stack.png)
 
 ## Conclusion
 
@@ -519,16 +527,17 @@ Enterprises generate new content all the time and slide decks are a
 common mechanism used to share and disseminate information internally
 with the organization and externally with customers or at conferences.
 Over time, rich information can remain buried and hidden in non-text
-modalities like graphs and tables in these slide decks. You can use this
-solution and the power of multimodal FMs such as Titan MultiModal
-Embeddings mode and LLaVA to discover new information or uncover new
-perspectives on content in slide decks.
+modalities like graphs and tables in these slide decks.
 
-Look out for two additional blogs as part of this series. Blog 2 will
-cover another approach you could take to “talk to your slide deck”. This
-approach will generate and store LLaVA inferences and use those stored
-inferences to respond to user queries. Blog 3 will compare the two
-approaches.
+You can use this solution and the power of multimodal FMs such as Titan
+Text Embeddings and Claude 3 Sonnet models to discover new information
+or uncover new perspectives on content in slide decks. You are welcome
+to try different Claude models available on Bedrock by updating the
+`CLAUDE_MODEL_ID` in the `globals.py` file.
+
+This is part 2 of a 3-part series. We used Amazon Titan Multimodal
+Embeddings and LLaVA models in part 1. Look out for part 3 where we will
+compare the approaches from part 1 and part 2.
 
 Portions of this code are released under the Apache 2.0 License as
 referenced here: https://aws.amazon.com/apache-2-0/
@@ -537,36 +546,42 @@ referenced here: https://aws.amazon.com/apache-2-0/
 
 ## Author bio
 
-<img style="float: left; margin: 0 10px 0 0;" src="images/ML-16123-Amit.jpg">Amit
-Arora is an AI and ML Specialist Architect at Amazon Web Services,
-helping enterprise customers use cloud-based machine learning services
-to rapidly scale their innovations. He is also an adjunct lecturer in
-the MS data science and analytics program at Georgetown University in
-Washington D.C.
+<img style="float: left; margin: 0 10px 0 0;" src="images/ML-16123-Amit.jpg">
+<b>Amit Arora</b> is an AI and ML Specialist Architect at Amazon Web
+Services, helping enterprise customers use cloud-based machine learning
+services to rapidly scale their innovations. He is also an adjunct
+lecturer in the MS data science and analytics program at Georgetown
+University in Washington D.C.
 
 <br><br>
 
-<img style="float: left; margin: 0 10px 0 0;" src="images/ML-16123-Manju.jpg">Manju
-Prasad is a Senior Solutions Architect within Strategic Accounts at
-Amazon Web Services. She focuses on providing technical guidance in a
-variety of domains, including AI/ML to a marquee M&E customer. Prior to
-joining AWS, she has worked for companies in the Financial Services
-sector and also a startup.
+<img style="float: left; margin: 0 10px 0 0;" src="images/ML-16123-Manju.jpg">
+<b>Manju Prasad</b> is a Senior Solutions Architect at Amazon Web
+Services. She focuses on providing technical guidance in a variety of
+technical domains, including AI/ML. Prior to joining AWS, she designed
+and built solutions for companies in the financial services sector and
+also for a startup. She has worked in all layers of the software stack,
+ranging from webdev to databases and has experience in all levels of the
+software development lifecycle. She is passionate about sharing
+knowledge and fostering interest in emerging talent.
 
 <br><br>
 
-<img style="float: left; margin: 0 10px 0 0;" src="images/ML-16123-Archana.jpg">Archana
-Inapudi is a Senior Solutions Architect at AWS supporting Strategic
-Customers. She has over a decade of experience helping customers design
-and build data analytics, and database solutions. She is passionate
-about using technology to provide value to customers and achieve
-business outcomes.
+<img style="float: left; margin: 0 10px 0 0;" src="images/ML-16123-Archana.jpg">
+<b>Archana Inapudi</b> is a Senior Solutions Architect at AWS,
+supporting a strategic customer. She has over a decade of cross-industry
+expertise leading strategic technical initiatives. Archana is an
+aspiring member of the AIML technical field community at AWS. Prior to
+joining AWS, Archana led a migration from traditional siloed data
+sources to Hadoop at a health care company. She is passionate about
+using technology to accelerate growth, provide value to customers, and
+achieve business outcomes.
 
 <br><br>
 
-<img style="float: left; margin: 0 10px 0 0;" src="images/ML-16123-Antara.jpg">Antara
-Raisa is an AI and ML Solutions Architect at Amazon Web Services
-supporting Strategic Customers based out of Dallas, Texas. She also has
-previous experience working with large enterprise partners at AWS, where
-she worked as a Partner Success Solutions Architect for digital native
-customers.
+<img style="float: left; margin: 0 10px 0 0;" src="images/ML-16123-Antara.jpg">
+<b>Antara Raisa</b> is an AI and ML Solutions Architect at Amazon Web
+Services supporting Strategic Customers based out of Dallas, Texas. She
+also has previous experience working with large enterprise partners at
+AWS, where she worked as a Partner Success Solutions Architect for
+digital native customers.
