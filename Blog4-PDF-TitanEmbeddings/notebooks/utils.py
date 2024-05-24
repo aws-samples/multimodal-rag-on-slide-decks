@@ -15,9 +15,26 @@ logger = logging.getLogger(__name__)
 
 s3 = boto3.client('s3')
 
+# llm_prompt: str = """
+
+# Human: Use the summary to provide a concise answer and a long answer to the question to the best of your abilities. The concise answer should be one line long which contains the direct answer to the question. The long answer contains the reason why you chose the concise answer and your reasoning behind it. If you cannot answer the question from the context then say I do not know, do not make up an answer.
+
+# <question>
+# {question}
+# </question>
+
+# <summary>
+# {summary}
+# </summary>
+
+# Your response should be in JSON format containing two elements as discussed: "concise_answer" and "answer_explanation". The concise_answer represents the short answer and answer_explanation represents the long answer. 
+
+# Assistant:Sure, here is my response in JSON based on the summary and question provided: """
+
 llm_prompt: str = """
 
-Human: Use the summary to provide a concise answer to the question to the best of your abilities. If you cannot answer the question from the context then say I do not know, do not make up an answer.
+Human: Use the context in the <summary></summary> tags to provide a answer to the question to the best of your abilities. If you cannot answer the question from the context then say I do not know, do not make up an answer.
+
 <question>
 {question}
 </question>
@@ -26,19 +43,20 @@ Human: Use the summary to provide a concise answer to the question to the best o
 {summary}
 </summary>
 
-Assistant:"""
+Assistant: Here is my answer based on the context provided:"""
 
-combined_text_and_image_prompt: str = """
-Human: You are an assistant for question-answering tasks. Use the following pieces of retrieved context in the section demarcated by "```" to answer the question. If you don't know the answer just say that you don't know. Use three sentences maximum and keep the answer concise.
+# combined_text_and_image_prompt: str = """
+# Human: You are an assistant for question-answering tasks. Use the following pieces of retrieved context in the section demarcated by "```" to answer the question. If you don't know the answer just say that you don't know. Use three sentences maximum and keep the answer concise.
 
-```
-{context}
-```
+# ```
+# {context}
+# ```
 
-Question: {question}
+# Question: {question}
 
-Assistant:
-"""
+# Assistant:
+# """
+
 
 
 
@@ -95,9 +113,12 @@ def get_text_embedding(bedrock: botocore.client, prompt_data: str) -> np.ndarray
 
     return embedding
 
-def get_llm_response(bedrock: botocore.client, question: str, summary: str) -> str:
+def get_llm_response(bedrock: botocore.client, 
+                     question: str, 
+                     summary: str, 
+                     modelId: str = g.CLAUDE_MODEL_ID) -> str:
     prompt = llm_prompt.format(question=question, summary=summary)
-    
+
     body = json.dumps(
     {
         "anthropic_version": "bedrock-2023-05-31",
@@ -111,15 +132,15 @@ def get_llm_response(bedrock: botocore.client, question: str, summary: str) -> s
             }
         ],
     })
-        
+
     try:
         response = bedrock.invoke_model(
-        modelId=g.CLAUDE_MODEL_ID,
+        modelId=modelId,
         body=body)
 
         response_body = json.loads(response['body'].read().decode("utf-8"))
         llm_response = response_body['content'][0]['text'].replace('"', "'")
-        
+
     except Exception as e:
         logger.error(f"exception while slide_text={summary[:10]}, exception={e}")
         llm_response = None
@@ -129,8 +150,8 @@ def get_llm_response(bedrock: botocore.client, question: str, summary: str) -> s
 def combined_llm_response(bedrock: botocore.client, 
                    question:str, 
                    context: str) -> str:
-    prompt = combined_text_and_image_prompt.format(context=context, 
-                                                  question=question)
+    prompt = llm_prompt.format(question=question,
+                                summary=context)
 
     body = json.dumps(
     {

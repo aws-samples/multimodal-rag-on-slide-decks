@@ -28,14 +28,13 @@ OS_SERVICE: str = "aoss"
 # local files and folder structure
 IMAGE_DIR: str = "img"
 PDF_IMAGE_DIR: str = "pdf_img"
-PDF_TEXT_DIR: str = "multimodal/pdf_txt"
+PDF_TEXT_DIR: str = f"{BUCKET_PREFIX}/pdf_txt"
 IMAGE_FILE_EXTN: str = ".jpg"
 TEXT_FILE_EXTN: str = ".txt"
 B64_ENCODED_IMAGES_DIR: str = os.path.join(IMAGE_DIR, "b64_images")
 
 # json files
 JSON_TEXT_DIR: str = "pdf_text_json_dir"
-JSON_IMG_DIR: str = "pdf_img_json_dir"
 
 # CFN_STACK_NAME: str = "multimodal-blog2-stack"
 
