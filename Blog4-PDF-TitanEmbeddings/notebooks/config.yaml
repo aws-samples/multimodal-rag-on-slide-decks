@@ -30,10 +30,15 @@ metrics_dir:
 # if you want to split the page either horizontally or vertically, set either to yes
 # if you want to save the entire page to an image without any splits, set both to no
 page_split_imgs: 
+  # if the images are manually provided, then do not split the pdf pages into images
+  # just extract the text and use the images that the user provides, else split the images
+  
+  # set all three to "no if you want to take a screenshot of the entire page from the pdf file
+  manually_saved_images_provided: no
   horizontal_split: no
   vertical_split: no
   # set the image resolution
-  image_scale: 2.5
+  image_scale: 3
 
 # content information: pdf files and slide decks
 content_info:
@@ -41,7 +46,10 @@ content_info:
   content_type: pdf 
   pdf_file_url: 
   pdf_local_files:
-  - <enter your pdf files as a list here>
+  # this should be in a pdf_data dir that you create
+  - <your-pdf-file-name>
+  # save the images manually from the pdf if need be
+  manually_saved_images_path: manually_saved_imgs
   slide_deck:
     url: "https://d1.awsstatic.com/events/Summits/torsummit2023/CMP301_TrainDeploy_E1_20230607_SPEdited.pdf"
     local_path:
@@ -79,7 +87,7 @@ eval_qna_dataset_info:
 # text description
 direct_image_answer_retrieval_prompt: |
   "Human: Your role is to retrieve information from the image provided if the question provided in the <question></question> tags does not have an answer directly mentioned in the <img_text_desc></img_text_desc> tags.
-  If the image description (img_text_desc) does not contain the answer to the question below, then search the "data" for it. If the image description (img_text_desc) does contain answer to the question, then your response should be only one word - "answer_in_text_desc". 
+  If the image description (img_text_desc) does not contain the answer to the question below, then search the "data" for it. If the image description (img_text_desc) does contain answer to the question, then your response should be only one word - "answer_already_in_img_desc". 
   If the answer to the question is not provided in the <img_text_desc>, then search the actual image provided in the "data" and look for the answer to the question. Refer to the img_text_desc and question below:
   
   <img_text_desc>
@@ -94,7 +102,7 @@ direct_image_answer_retrieval_prompt: |
   Refer to an example in the <answer_to_question_in_img_desc_exists></answer_to_question_in_img_desc_exists> tags when the answer to the question is given in the img_text_desc below:
 
     <answer_to_question_in_img_desc_exists>
-    "answer_in_text_desc"
+    "answer_already_in_img_desc"
     <answer_to_question_in_img_desc_exists>
     
     if the answer to the <question> is not in the img_text_desc, search for it in the actual image in the "data" provided to you.
