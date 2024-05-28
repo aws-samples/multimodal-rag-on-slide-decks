@@ -15,21 +15,27 @@ logger = logging.getLogger(__name__)
 
 s3 = boto3.client('s3')
 
-# llm_prompt: str = """
+question_entities_extraction_prompt: str = """
 
-# Human: Use the summary to provide a concise answer and a long answer to the question to the best of your abilities. The concise answer should be one line long which contains the direct answer to the question. The long answer contains the reason why you chose the concise answer and your reasoning behind it. If you cannot answer the question from the context then say I do not know, do not make up an answer.
+Human: Your role is to extract entities from a question and what is specifically needed from the question. Entities, are specific pieces of information or objects within a text that carry particular significance. These can be real-world entities like names of people, places, organizations, or dates. Refer to the types of entities: Named entities: These include names of people, organizations, locations, and dates. You can have specific identifiers within this, such as person names or person occupations.
 
-# <question>
-# {question}
-# </question>
+    Custom entities: These are entities specific to a particular application or domain, such as product names, medical terms, or technical jargon.
 
-# <summary>
-# {summary}
-# </summary>
+    Temporal entities: These are entities related to time, such as dates, times, and durations.
 
-# Your response should be in JSON format containing two elements as discussed: "concise_answer" and "answer_explanation". The concise_answer represents the short answer and answer_explanation represents the long answer. 
+    Product entities: Names of products might be grouped together into product entities.
 
-# Assistant:Sure, here is my response in JSON based on the summary and question provided: """
+    Location entities: These entities categorize or classify items based on location indicators, such as state codes.
+
+Now, refer to the question below in the <question></question> tags and give the entities within it.
+
+<question>
+{question}
+</question>
+
+Your response should be concise and only contain the names of the entities, nothing else. Be accurate. Do not make up an answer.
+
+Assistant: """
 
 llm_prompt: str = """
 
@@ -147,11 +153,9 @@ def get_llm_response(bedrock: botocore.client,
 
     return llm_response
 
-def combined_llm_response(bedrock: botocore.client, 
-                   question:str, 
-                   context: str) -> str:
-    prompt = llm_prompt.format(question=question,
-                                summary=context)
+def get_question_entities(bedrock: botocore.client, 
+                   question:str) -> str:
+    prompt = question_entities_extraction_prompt.format(question=question)
 
     body = json.dumps(
     {

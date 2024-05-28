@@ -24,21 +24,21 @@ metrics_dir:
   dir_name: metrics
   text_and_image_raw_content: all_content_description.csv
 
-# set this to yes if you want to split the images 4 ways, and no if 
-# you want the entire page to be a single image
-# if you want to split the image in 4 ways, set both to yes.
-# if you want to split the page either horizontally or vertically, set either to yes
-# if you want to save the entire page to an image without any splits, set both to no
+# this section gives user the control to split the image into parts, or ingest the image as a whole as is
+# there are 4 options to split the image. 
+# 1. if you do not want to split the image, set all of the three below to "no" - manually_saved_images_provided, horizontal_split and vertical_split
+# 2. if you want to split the image horizontally, only set the "horizontal_split" to yes and the rest to no
+# 3. if you want to split the image vertically, only set the "vertical_split" to yes and the rest to no
+# 4. if you want to split the image 4 ways, set "horizontal_split" and "vertical_split" to yes
+# if you want to use the manually uploaded images (that you extract from the document), set "manually_saved_images_provided" to yes
 page_split_imgs: 
-  # if the images are manually provided, then do not split the pdf pages into images
-  # just extract the text and use the images that the user provides, else split the images
-  
-  # set all three to "no if you want to take a screenshot of the entire page from the pdf file
   manually_saved_images_provided: no
   horizontal_split: no
   vertical_split: no
   # set the image resolution
   image_scale: 3
+
+prefilter_doc_retrieval_size: 5
 
 # content information: pdf files and slide decks
 content_info:
@@ -46,8 +46,16 @@ content_info:
   content_type: pdf 
   pdf_file_url: 
   pdf_local_files:
-  # this should be in a pdf_data dir that you create
-  - <your-pdf-file-name>
+  - tesla_rec.pdf
+  # - Nvidia_rec.pdf
+  - Microsoft_rec.pdf
+  - Intel_rec.pdf
+  - Cisco_rec.pdf
+  # - Broadcom_rec.pdf
+  - Boeing_rec.pdf
+  - APPLE_rec.pdf
+  - AMD_rec.pdf
+  - Amazon_rec.pdf
   # save the images manually from the pdf if need be
   manually_saved_images_path: manually_saved_imgs
   slide_deck:
@@ -82,33 +90,6 @@ eval_qna_dataset_info:
   golden_response_key: Response
   updated_eval_file: updated_eval_dataset.csv
   k_size: 1
-  
-# this is the prompt that is used to search for the answer in the image if not present already in the image
-# text description
-direct_image_answer_retrieval_prompt: |
-  "Human: Your role is to retrieve information from the image provided if the question provided in the <question></question> tags does not have an answer directly mentioned in the <img_text_desc></img_text_desc> tags.
-  If the image description (img_text_desc) does not contain the answer to the question below, then search the "data" for it. If the image description (img_text_desc) does contain answer to the question, then your response should be only one word - "answer_already_in_img_desc". 
-  If the answer to the question is not provided in the <img_text_desc>, then search the actual image provided in the "data" and look for the answer to the question. Refer to the img_text_desc and question below:
-  
-  <img_text_desc>
-  {context}
-  </img_text_desc>
-  <question>
-  {question}
-  </question>
-  
-  If the answer to the question is not in the img_text_desc, search the actual image provided in "data" and retrieve the answer directly from the image provided. Search for the question directly in the image in this case and retrieve the most accurate answer. Do not make up an answer.
-  
-  Refer to an example in the <answer_to_question_in_img_desc_exists></answer_to_question_in_img_desc_exists> tags when the answer to the question is given in the img_text_desc below:
-
-    <answer_to_question_in_img_desc_exists>
-    "answer_already_in_img_desc"
-    <answer_to_question_in_img_desc_exists>
-    
-    if the answer to the <question> is not in the img_text_desc, search for it in the actual image in the "data" provided to you.
-    
-    Assistant: "
-    
 
 QnA_generator_prompt: |
   "Human: Based on the text description provided in <text_desc></text_desc> tags, generate a list of five to 10 questions. Only refer to the context in the <text_desc> tags, and do not provide questions that are not related to the context provided. Your response should be in a JSON format containing two elements: 'question' and 'answer'. The question should be directly related to the context provided in the <text_desc> tags and the answer should be the answer to that question from the <text_desc> context. Do not make up an answer.If you do not know the answer to the question just say that you don't know the answer. Don't try to make up an answer or a question. Refer to the context below:
