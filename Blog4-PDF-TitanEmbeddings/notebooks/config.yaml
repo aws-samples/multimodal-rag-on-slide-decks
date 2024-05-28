@@ -38,7 +38,7 @@ page_split_imgs:
   # set the image resolution
   image_scale: 3
 
-prefilter_doc_retrieval_size: 5
+prefilter_doc_retrieval_size: 3
 
 # content information: pdf files and slide decks
 content_info:

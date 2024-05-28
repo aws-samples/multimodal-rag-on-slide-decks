@@ -51,20 +51,6 @@ Human: Use the context in the <summary></summary> tags to provide a answer to th
 
 Assistant: Here is my answer based on the context provided:"""
 
-# combined_text_and_image_prompt: str = """
-# Human: You are an assistant for question-answering tasks. Use the following pieces of retrieved context in the section demarcated by "```" to answer the question. If you don't know the answer just say that you don't know. Use three sentences maximum and keep the answer concise.
-
-# ```
-# {context}
-# ```
-
-# Question: {question}
-
-# Assistant:
-# """
-
-
-
 
 def upload_to_s3(local_file_path:str, bucket_name: str, bucket_prefix:str) -> None:
     global s3
