@@ -33,9 +33,17 @@ Now, refer to the question below in the <question></question> tags and give the 
 {question}
 </question>
 
-Your response should be concise and only contain the names of the entities, nothing else. Be accurate. Do not make up an answer.
+Your response should be concise and only contain the names of the entities, nothing else. Be accurate. Do not make up an answer. Do not give titles or headings for the entities. Just give the entities. Your response should NOT contain any filler words like "custom entities: ", and so on. Just give the name of the entities in your response. Your response should have a commas between the words/entities. only spaces between each entity name. View an example below of what a response should be (in <response></response> tags) versus should not be (in <should_not_be></should_not_be>:
 
-Assistant: """
+<should_not_be>
+Named entities: ratings amazon
+</should_not_be>
+
+<response>
+ratings amazon
+</response>
+
+Assistant: Sure, based on the context, here are the names of entities without any filler words before: """
 
 llm_prompt: str = """
 
