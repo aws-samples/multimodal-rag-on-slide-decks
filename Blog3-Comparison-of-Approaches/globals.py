@@ -20,6 +20,9 @@ CLAUDE_MODEL_ID: str = "anthropic.claude-3-sonnet-20240229-v1:0"
 ACCEPT_ENCODING: str = "application/json"
 CONTENT_ENCODING: str = "application/json"
 
+# Amazon Titan multimodal model
+FMC_MODEL_ID: str = "amazon.titan-embed-image-v1"
+
 # Amazon OpenSearch Service Serverless
 OS_SERVICE: str = "aoss"
 
@@ -27,9 +30,7 @@ OS_SERVICE: str = "aoss"
 IMAGE_DIR: str = "img"
 IMAGE_FILE_EXTN: str = ".jpg"
 B64_ENCODED_IMAGES_DIR: str = os.path.join(IMAGE_DIR, "b64_images")
-
-# this is the slide deck to which we will be talking to. Replace with your slide deck's URL to analyze a different deck
-SLIDE_DECK: str = "https://d1.awsstatic.com/events/Summits/torsummit2023/CMP301_TrainDeploy_E1_20230607_SPEdited.pdf"
+EMBEDDINGS_DIR: str = "embeddings"
 
 # AWS CloudFormation stack that created the resources for this blog post including this notebook
 # if a different name is used while creating the CloudFormation stack then change this to match the name you used
