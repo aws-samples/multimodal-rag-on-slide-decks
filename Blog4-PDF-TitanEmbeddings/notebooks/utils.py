@@ -16,16 +16,7 @@ logger = logging.getLogger(__name__)
 s3 = boto3.client('s3')
 
 question_entities_extraction_prompt: str = """
-
-Human: Your role is to extract entities from a question and what is specifically needed from the question. Entities, are specific pieces of information or objects within a text that carry particular significance. These can be real-world entities like names of people, places, organizations, or dates. Refer to the types of entities: Named entities: These include names of people, organizations, locations, and dates. You can have specific identifiers within this, such as person names or person occupations.
-
-    Custom entities: These are entities specific to a particular application or domain, such as product names, medical terms, or technical jargon.
-
-    Temporal entities: These are entities related to time, such as dates, times, and durations.
-
-    Product entities: Names of products might be grouped together into product entities.
-
-    Location entities: These entities categorize or classify items based on location indicators, such as state codes.
+Human: Your role is to extract entities from a question. Entities, are specific pieces of information or objects within a text that carry particular significance. These can be names of people, places, organizations, or dates. Include names of people, organizations, locations, and dates. These can be specific to a particular application or domain, such as product names, medical terms, or technical jargon. Mention names of products might be grouped together into product entities. Also mention data related entities in the question.
 
 Now, refer to the question below in the <question></question> tags and give the entities within it.
 
@@ -33,17 +24,9 @@ Now, refer to the question below in the <question></question> tags and give the 
 {question}
 </question>
 
-Your response should be concise and only contain the names of the entities, nothing else. Be accurate. Do not make up an answer. Do not give titles or headings for the entities. Just give the entities. Your response should NOT contain any filler words like "custom entities: ", and so on. Just give the name of the entities in your response. Your response should have a commas between the words/entities. only spaces between each entity name. View an example below of what a response should be (in <response></response> tags) versus should not be (in <should_not_be></should_not_be>:
+Your response should be concise and only contain the names of the entities, nothing else. Do not add any prefiller words. Your response should only contain entities from the question above. Give the entities that are also related to what is being asked from the question spefically.
 
-<should_not_be>
-Named entities: ratings amazon
-</should_not_be>
-
-<response>
-ratings amazon
-</response>
-
-Assistant: Sure, based on the context, here are the names of entities without any filler words before: """
+Assistant: Sure, based on the context and the example provided, here are the entities extracted from the question: """
 
 llm_prompt: str = """
 
