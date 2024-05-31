@@ -38,8 +38,6 @@ page_split_imgs:
   # set the image resolution
   image_scale: 3
 
-prefilter_doc_retrieval_size: 3
-
 # content information: pdf files and slide decks
 content_info:
   # if you are using pdfs, then your content type is 'pdf', else it is 'slide_deck'
@@ -89,7 +87,8 @@ eval_qna_dataset_info:
   question_key: Query
   golden_response_key: Response
   updated_eval_file: updated_eval_dataset.csv
-  k_size: 1
+
+k_count_retrieval: 4
 
 QnA_generator_prompt: |
   "Human: Based on the text description provided in <text_desc></text_desc> tags, generate a list of five to 10 questions. Only refer to the context in the <text_desc> tags, and do not provide questions that are not related to the context provided. Your response should be in a JSON format containing two elements: 'question' and 'answer'. The question should be directly related to the context provided in the <text_desc> tags and the answer should be the answer to that question from the <text_desc> context. Do not make up an answer.If you do not know the answer to the question just say that you don't know the answer. Don't try to make up an answer or a question. Refer to the context below:

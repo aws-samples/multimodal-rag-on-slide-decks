@@ -24,7 +24,7 @@ Now, refer to the question below in the <question></question> tags and give the 
 {question}
 </question>
 
-Your response should be concise and only contain the names of the entities, nothing else. Do not add any prefiller words. Your response should only contain entities from the question above. Give the entities that are also related to what is being asked from the question spefically.
+Your response should be concise and only contain the names of the entities, nothing else. Do not add any prefiller words. Your response should only contain entities from the question above. Also give what is being asked for in the question as an entity.
 
 Assistant: Sure, based on the context and the example provided, here are the entities extracted from the question: """
 
@@ -95,6 +95,8 @@ def get_text_embedding(bedrock: botocore.client, prompt_data: str) -> np.ndarray
         embedding = None
 
     return embedding
+
+
 
 def get_llm_response(bedrock: botocore.client, 
                      question: str, 
