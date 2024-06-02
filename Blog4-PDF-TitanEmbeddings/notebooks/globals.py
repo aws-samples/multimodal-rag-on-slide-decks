@@ -15,8 +15,6 @@ S3_MODEL_CODE_PREFIX: str = "code"
 S3_MODEL_PREFIX: str = "model"
 
 # Amazon Titan Text model
-AWS_REGION: str = boto3.Session().region_name
-TITAN_URL: str = f"https://bedrock-runtime.{AWS_REGION}.amazonaws.com"
 TITAN_MODEL_ID: str = "amazon.titan-embed-text-v1"
 CLAUDE_MODEL_ID: str = "anthropic.claude-3-sonnet-20240229-v1:0"
 ACCEPT_ENCODING: str = "application/json"

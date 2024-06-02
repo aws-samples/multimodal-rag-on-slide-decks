@@ -135,7 +135,8 @@ def get_llm_response(bedrock: botocore.client,
     return llm_response
 
 def get_question_entities(bedrock: botocore.client, 
-                   question:str) -> str:
+                   question:str, 
+                   modelId: str = g.CLAUDE_MODEL_ID) -> str:
     prompt = question_entities_extraction_prompt.format(question=question)
 
     body = json.dumps(
@@ -154,14 +155,14 @@ def get_question_entities(bedrock: botocore.client,
 
     try:
         response = bedrock.invoke_model(
-        modelId=g.CLAUDE_MODEL_ID,
+        modelId=modelId,
         body=body)
 
         response_body = json.loads(response['body'].read().decode("utf-8"))
         combined_llm_response = response_body['content'][0]['text'].replace('"', "'")
 
     except Exception as e:
-        logger.error(f"exception while slide_text={summary[:10]}, exception={e}")
+        logger.error(f"exception while getting question entities: exception={e}")
         combined_llm_response = None
 
     return combined_llm_response

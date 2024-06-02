@@ -3,13 +3,19 @@
 app_name: multi-modal-rag-bedrock
 
 aws:
-  region: us-east-1
+  region: us-west-2
   # adding the cfn stack name in the config.yml file in case users
   # deploy the template using their custom name
   cfn_stack_name: multi-modal-revised
+  os_service: aoss
 
 # directory paths
+# these directory paths contain the source data PDF files that are consumed, 
+# the text and image descriptions that are stored as embeddings in the opensearch
+# text and image indexes
 pdf_dir_info:
+  # a public pdf file is used by default in this folder but if you would like to use
+  # your own pdf files, put them manually in this local directory
   source_pdf_dir: pdf_data
   pdf_img_path: images
   pdf_txt_path: text_files
@@ -19,6 +25,17 @@ pdf_dir_info:
   bucket_prefix: multimodal
   bucket_img_prefix: img
   qna_dir: question_answer_files
+  image_format: JPEG
+
+# Set the steps you want to run all via a python script to get the 
+# response to your evaluation data/save the embeddings, and prepare the 
+# data for multimodal image RAG inference
+run_steps:
+  1_data_prep_pdf_files.ipynb: yes
+  1_data_prep_slide_deck.ipynb: no
+  2_data_ingestion.ipynb: yes
+  3_rag_inference.ipynb: yes
+  4_rag_evaluation.ipynb: yes
 
 metrics_dir:
   dir_name: metrics
@@ -63,6 +80,7 @@ content_info:
   text_extn: .txt
 
 parallel_inference_count: 10
+minimum_entities_to_match_from_question: 2
 
 # enter information about the llm to get responses from (in this case claude sonnet), 
 # bedrock ep url, the embeddings model - TODO - Change these names to be more generic
