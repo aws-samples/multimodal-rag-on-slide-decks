@@ -42,6 +42,7 @@ metrics_dir:
   dir_name: metrics
   text_and_image_raw_content: all_content_description.csv
   eval_score_dataset: quantitative_eval_metrics.csv
+  QnA_bank: synthetic_qna_bank.csv
 
 # this section gives user the control to split the image into parts, or ingest the image as a whole as is
 # there are 4 options to split the image. 
