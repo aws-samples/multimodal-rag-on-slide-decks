@@ -120,4 +120,9 @@ inference_parameters_for_qna_generation:
   caching: False
   max_tokens: 1000
 
+embeddings_model_info:
+  model: amazon.titan-embed-text-v1
+  max_text_len_for_embedding: 500
+  rouge_metric_selection: 'rougeL' # can be rouge-1, rouge-2, rouge-w, rouge-s, etc
+
  
