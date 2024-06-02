@@ -26,6 +26,7 @@ pdf_dir_info:
   bucket_img_prefix: img
   qna_dir: question_answer_files
   image_format: JPEG
+  prompts: prompt_templates
 
 # Set the steps you want to run all via a python script to get the 
 # response to your evaluation data/save the embeddings, and prepare the 
@@ -40,6 +41,7 @@ run_steps:
 metrics_dir:
   dir_name: metrics
   text_and_image_raw_content: all_content_description.csv
+  eval_score_dataset: quantitative_eval_metrics.csv
 
 # this section gives user the control to split the image into parts, or ingest the image as a whole as is
 # there are 4 options to split the image. 
@@ -90,7 +92,8 @@ bedrock_model_info:
   claude_input_tokens_pricing: 0.00300
   claude_output_tokens_pricing: 0.01500
   titan_model_id: amazon.titan-embed-text-v1
-
+  llm_as_a_judge: anthropic.claude-3-sonnet-20240229-v1:0
+  
 encoding_info:
   accept_encoding: "application/json"
   content_encoding: "application/json"
@@ -103,7 +106,7 @@ eval_qna_dataset_info:
   # this is the key/column name in the df that represents
   # the user question/query
   question_key: Query
-  golden_response_key: Response
+  target_response_key: Response
   updated_eval_file: updated_eval_dataset.csv
 
 k_count_retrieval: 4
@@ -124,5 +127,12 @@ embeddings_model_info:
   model: amazon.titan-embed-text-v1
   max_text_len_for_embedding: 500
   rouge_metric_selection: 'rougeL' # can be rouge-1, rouge-2, rouge-w, rouge-s, etc
+  # this parameter below helps fetch the ROUGE and Cosine similarity
+  # scores on responses from both the indexes, text, image seperately and then
+  # from both combined
+  get_quantitative_metrics_on:
+  - 'combined_response'
+  - 'text_response'
+  - 'img_response'
 
  
