@@ -15,6 +15,7 @@ opensearch-py==2.5.0
 numexpr==2.8.0
 packaging>=22.0
 rouge-score==0.1.2
+urllib3==2.2.1
 docutils
 requests
 requests-auth-aws-sigv4

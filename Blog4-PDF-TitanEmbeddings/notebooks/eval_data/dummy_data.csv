@@ -1,0 +1,5 @@
+﻿Query,Response
+What are the benefits of Machine learning?,"Machine learning helps with continually learning  from real-world data, and its capability to improve its performance"
+What are the Trade-offs between performance and model interpretability graph?,"linear regression and decision trees have higher interpretability but lower accuracy, neural nets have higher accuracy but lower interpretability"
+"In Operationalizing AI/ML workloads, what comes under 'Prepare for production'?","Develop infra/resources, quality assurance/testing, containerization, CI/CD"
+How can customers encrypt the data for security?,AWS KMS
