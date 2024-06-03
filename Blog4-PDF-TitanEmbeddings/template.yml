@@ -8,14 +8,17 @@ Metadata:
           default: Required Parameters
         Parameters:
           - OSCollectionName          
-          - OSIndexName
+          - OSTextIndexName
+          - OSImgIndexName
           - BucketName
           - NetworkPolicyName
     ParameterLabels:      
       OSCollectionName:
         default: OpenSearch collection name
-      OSIndexName:
-        default: OpenSearch vector index name
+      OSTextIndexName:
+        default: OpenSearch vector index name for text
+      OSImgIndexName:
+        default: OpenSearch vector index name for images
       BucketName:
         default: Bucket used to store data
       NetworkPolicyName:
@@ -30,10 +33,14 @@ Parameters:
     MaxLength: 63
     AllowedPattern: ^[a-z0-9](-*[a-z0-9])*
     ConstraintDescription: "Must be lowercase or numbers with a length of 1-63 characters"
-  OSIndexName:
-    Default: "slides"
+  OSImgIndexName:
+    Default: "images"
     Type: String
-    Description: "Name of the vector index in the Amazon OpenSearch Service Serverless (AOSS) collection"
+    Description: "Name of the vector index in the Amazon OpenSearch Service Serverless (AOSS) collection for image embeddings"
+  OSTextIndexName:
+    Default: "texts"
+    Type: String
+    Description: "Name of the vector index in the Amazon OpenSearch Service Serverless (AOSS) collection for text embeddings"
   BucketName:
     Default: "multimodal-blog2-bucket"
     Type: String
@@ -197,7 +204,11 @@ Resources:
   S3Bucket:
     Type: "AWS::S3::Bucket"
     Properties:
-      BucketName: !Join [ "-", [ !Ref BucketName, !Ref "AWS::AccountId" ] ]
+      BucketName: !Join 
+        - "-"
+        - - !Ref BucketName
+          - !Ref "AWS::AccountId"
+          - !Ref "AWS::Region"
 
   MultimodalNotebookInstance:
     Type: "AWS::SageMaker::NotebookInstance"
@@ -220,7 +231,7 @@ Resources:
     Properties:
       LogGroupName: !Sub "/aws/vendedlogs/multimodalpipeline-${AWS::StackName}"
 
-  MultimodalPipeline:
+  MultimodalPipelineForText:
     Type: "AWS::OSIS::Pipeline"
     Properties:
       LogPublishingOptions:
@@ -242,14 +253,45 @@ Resources:
           sink:
             - opensearch:
                 hosts: [${MultimodalCollection.CollectionEndpoint}]
-                index: ${OSIndexName}
+                index: ${OSTextIndexName}
                 aws:
                   serverless: true
                   serverless_options:
                     network_policy_name: ${NetworkPolicyName}
                   sts_role_arn: ${OSPipelineExecutionRole.Arn}
                   region: ${AWS::Region}
-      PipelineName: "multimodalpipeline-blog2"
+      PipelineName: "text-multimodalpipeline"
+      
+  MultimodalPipelineForImg:
+    Type: "AWS::OSIS::Pipeline"
+    Properties:
+      LogPublishingOptions:
+        IsLoggingEnabled: true
+        CloudWatchLogDestination:
+          LogGroup: !Ref LogGroup
+      MinUnits: 2
+      MaxUnits: 4
+      PipelineConfigurationBody: !Sub |
+        version: "2"
+        slide-pipeline:
+          source:
+            http:
+              path: "/data/ingest"
+          processor:
+          - date:
+              destination: "@timestamp"
+              from_time_received: true
+          sink:
+            - opensearch:
+                hosts: [${MultimodalCollection.CollectionEndpoint}]
+                index: ${OSImgIndexName}
+                aws:
+                  serverless: true
+                  serverless_options:
+                    network_policy_name: ${NetworkPolicyName}
+                  sts_role_arn: ${OSPipelineExecutionRole.Arn}
+                  region: ${AWS::Region}
+      PipelineName: "img-multimodalpipeline"
 
   cleanupBucketOnDelete:
     Type: Custom::cleanupbucket
@@ -310,10 +352,16 @@ Outputs:
     Description: "OpenSearch Collection endpoint"
     Value: 
       !GetAtt MultimodalCollection.CollectionEndpoint
-  OpenSearchIndexName:
-    Description: "OpenSearch Vector Index"
-    Value: !Ref OSIndexName
-  OpenSearchPipelineEndpoint:
-    Description: "OpenSearch Pipeline endpoint"
-    Value: !Select [0, !GetAtt MultimodalPipeline.IngestEndpointUrls]
+  OpenSearchTextIndexName:
+    Description: "OpenSearch Vector Index for text embeddings"
+    Value: !Ref OSTextIndexName
+  OpenSearchImgIndexName:
+    Description: "OpenSearch Vector Index for image embeddings"
+    Value: !Ref OSImgIndexName
+  OpenSearchPipelineTextEndpoint:
+    Description: "OpenSearch Pipeline endpoint for text embeddings"
+    Value: !Select [0, !GetAtt MultimodalPipelineForText.IngestEndpointUrls]
+  OpenSearchPipelineImgEndpoint:
+    Description: "OpenSearch Pipeline endpoint for images embeddings"
+    Value: !Select [0, !GetAtt MultimodalPipelineForImg.IngestEndpointUrls]
 
