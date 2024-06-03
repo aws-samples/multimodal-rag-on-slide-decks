@@ -40,7 +40,7 @@ pdf_dir_info:
 # data for multimodal image RAG inference
 run_steps:
   1_data_prep_pdf_files.ipynb: yes
-  1_data_prep_slide_deck.ipynb: no
+  1_data_prep_slide_deck.ipynb: yes
   2_data_ingestion.ipynb: yes
   3_rag_inference.ipynb: yes
   4_rag_evaluation.ipynb: yes
@@ -76,14 +76,14 @@ content_info:
   pdf_local_files:
   - tesla_rec.pdf
   # - Nvidia_rec.pdf
-  - Microsoft_rec.pdf
-  - Intel_rec.pdf
-  - Cisco_rec.pdf
+  # - Microsoft_rec.pdf
+  # - Intel_rec.pdf
+  # - Cisco_rec.pdf
   # - Broadcom_rec.pdf
-  - Boeing_rec.pdf
-  - APPLE_rec.pdf
-  - AMD_rec.pdf
-  - Amazon_rec.pdf
+  # - Boeing_rec.pdf
+  # - APPLE_rec.pdf
+  # - AMD_rec.pdf
+  # - Amazon_rec.pdf
   slide_deck:
     url: "https://d1.awsstatic.com/events/Summits/torsummit2023/CMP301_TrainDeploy_E1_20230607_SPEdited.pdf"
     local_path:
