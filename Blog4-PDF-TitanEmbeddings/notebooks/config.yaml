@@ -27,6 +27,10 @@ pdf_dir_info:
   qna_dir: question_answer_files
   image_format: JPEG
   prompts: prompt_templates
+  processed_prompts_for_eval: processed_llm_judge_evaluation_prompts.csv
+  judge_model_eval_completions: data/model_eval_completions
+  llm_as_a_judge_completions: llm_as_a_judge_completions.csv
+  index_response_distribution: index_response_distribution.csv
 
 # Set the steps you want to run all via a python script to get the 
 # response to your evaluation data/save the embeddings, and prepare the 
@@ -93,7 +97,13 @@ bedrock_model_info:
   claude_input_tokens_pricing: 0.00300
   claude_output_tokens_pricing: 0.01500
   titan_model_id: amazon.titan-embed-text-v1
-  llm_as_a_judge: anthropic.claude-3-sonnet-20240229-v1:0
+
+# judge in the loop model to evaluate completions against human generated/golden titles
+eval_model_info:
+  model: anthropic.claude-3-sonnet-20240229-v1:0
+  prompt_template: eval_template.txt
+  input_tokens_pricing: 0.00300
+  output_tokens_pricing: 0.01500
   
 encoding_info:
   accept_encoding: "application/json"
@@ -109,6 +119,7 @@ eval_qna_dataset_info:
   question_key: Query
   target_response_key: Response
   updated_eval_file: updated_eval_dataset.csv
+  prompt_template: eval_template.txt
 
 k_count_retrieval: 4
 
@@ -123,6 +134,11 @@ inference_parameters_for_qna_generation:
   temperature: 0.1
   caching: False
   max_tokens: 1000
+  
+inference_parameters_for_explanations:
+  temperature: 0.1
+  caching: False
+  max_tokens: 500
 
 embeddings_model_info:
   model: amazon.titan-embed-text-v1
