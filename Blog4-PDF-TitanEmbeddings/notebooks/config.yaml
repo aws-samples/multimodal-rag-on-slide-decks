@@ -18,6 +18,7 @@ pdf_dir_info:
   # your own pdf files, put them manually in this local directory
   source_pdf_dir: pdf_data
   pdf_img_path: images
+  slide_deck_img_dir: img
   pdf_txt_path: text_files
   pdf_extracted_data: pdf_extracted_data
   json_img_dir: pdf_img_json_dir
@@ -27,6 +28,8 @@ pdf_dir_info:
   qna_dir: question_answer_files
   image_format: JPEG
   prompts: prompt_templates
+  # save the images manually from the pdf if need be
+  manually_saved_images_path: manually_saved_imgs
   processed_prompts_for_eval: processed_llm_judge_evaluation_prompts.csv
   judge_model_eval_completions: data/model_eval_completions
   llm_as_a_judge_completions: llm_as_a_judge_completions.csv
@@ -54,13 +57,16 @@ metrics_dir:
 # 2. if you want to split the image horizontally, only set the "horizontal_split" to yes and the rest to no
 # 3. if you want to split the image vertically, only set the "vertical_split" to yes and the rest to no
 # 4. if you want to split the image 4 ways, set "horizontal_split" and "vertical_split" to yes
-# if you want to use the manually uploaded images (that you extract from the document), set "manually_saved_images_provided" to yes
 page_split_imgs: 
-  manually_saved_images_provided: no
+  # all of the options below are set to 'no', so the entire pdf page will be
+  # saved as an image without any cropping
   horizontal_split: no
   vertical_split: no
   # set the image resolution
   image_scale: 3
+
+# if you want to use the manually uploaded images (that you extract from the document, for example, screenshots), set "manually_saved_images_provided" to yes 
+manually_saved_images_provided: no
 
 # content information: pdf files and slide decks
 content_info:
@@ -78,8 +84,6 @@ content_info:
   - APPLE_rec.pdf
   - AMD_rec.pdf
   - Amazon_rec.pdf
-  # save the images manually from the pdf if need be
-  manually_saved_images_path: manually_saved_imgs
   slide_deck:
     url: "https://d1.awsstatic.com/events/Summits/torsummit2023/CMP301_TrainDeploy_E1_20230607_SPEdited.pdf"
     local_path:
@@ -112,6 +116,7 @@ encoding_info:
 # enter the file - enter information in here if you are bringing in a curated dataset of questions to test against
 eval_qna_dataset_info:
   dir_name: eval_data
+  eval_dataset_name: mod_csv.csv
   # set 'is_given' to no if the eval dataset is not given
   is_given: Yes
   # this is the key/column name in the df that represents

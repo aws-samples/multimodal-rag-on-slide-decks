@@ -25,7 +25,7 @@ OS_SERVICE: str = "aoss"
 
 # local files and folder structure
 IMAGE_DIR: str = "img"
-PDF_IMAGE_DIR: str = "pdf_img"
+PDF_IMAGE_DIR: str = f"{BUCKET_PREFIX}/pdf_img"
 PDF_TEXT_DIR: str = f"{BUCKET_PREFIX}/pdf_txt"
 IMAGE_FILE_EXTN: str = ".jpg"
 TEXT_FILE_EXTN: str = ".txt"
