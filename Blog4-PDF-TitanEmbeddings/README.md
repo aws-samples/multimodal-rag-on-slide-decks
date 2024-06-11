@@ -12,7 +12,7 @@ The following steps describe how this solution works. View the architecture diag
 
 ### Data Preparation - Ingest and store PDFs using text and image files
 
-1. In this directory, we provide with an option to use a publicly available [AWS whitepaper]('https://docs.aws.amazon.com/pdfs/whitepapers/latest/ml-best-practices-healthcare-life-sciences/ml-best-practices-healthcare-life-sciences.pdf#ml-best-practices-healthcare-life-sciences') as a PDF file on _machine learning best practices for healthcare life sciences_. If you want to bring your own custom PDF files, URLs, or a combination of both, then mention them in the ['config.yaml']('config.yaml') file in the `content_info` section under `pdf_local_files` as given below:
+1. In this directory, we provide with an option to use a publicly available [AWS whitepaper]('https://docs.aws.amazon.com/pdfs/whitepapers/latest/ml-best-practices-healthcare-life-sciences/ml-best-practices-healthcare-life-sciences.pdf#ml-best-practices-healthcare-life-sciences') as a PDF file on _machine learning best practices for healthcare life sciences_. If you want to bring your own custom PDF files, URLs, or a combination of both, then mention them in the [config.yaml]('config.yaml') file in the `content_info` section under `pdf_local_files` as given below:
 
 ``` {.yaml}
 # content information: pdf files and slide decks
