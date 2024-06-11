@@ -8,10 +8,7 @@ Additionally, this repo also shows how to use [LiteLLM](https://github.com/Berri
 
 The following steps describe how this solution works. View the architecture diagram for this solution below:
 
-<figure>
-<img src="images/architecture_diagram.jpg"
-id="fig-architecture-design" alt="Figure 1: PDF Multimodal architecture" />
-</figure>
+![PDF Multimodal Architecture Diagram](notebooks/images/architecture_diagram.jpg)
 
 ### Data Preparation - Ingest and store PDFs using text and image files
 
@@ -192,16 +189,6 @@ python main.py
 ```
 
 You could also run the notebooks manually in the order given above.
-
-## Demo
-
-View an example demo below for this solution. This uses a publicly available AWS whitepaper:
-
-<figure class="video_container">
- <video controls="true" allowfullscreen="true">
- <source src="images/multimodal_pdf_demo.mov" type="video/mov">
- </video>
-</figure>
 
 
 ## Tip
