@@ -8,7 +8,7 @@ Additionally, this repo also shows how to use [LiteLLM](https://github.com/Berri
 
 The following steps describe how this solution works. View the architecture diagram for this solution below:
 
-![PDF Multimodal Architecture Diagram](Blog4-PDF-TitanEmbeddings/notebooks/images/architecture_diagram.jpg)
+![](notebooks/images/architecture_diagram.jpg)
 
 ### Data Preparation - Ingest and store PDFs using text and image files
 
