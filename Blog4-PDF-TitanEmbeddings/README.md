@@ -1,50 +1,71 @@
 # Talk to your PDF files (Enhanced Multimodal RAG) using foundation models (FMs) hosted on Amazon Bedrock and `Hybrid Search`
 
-This example shows how to use an enhanced RAG workflow to generate responses to user questions from multiple`PDF files`. In this repository, we will generate accurate and specific responses to user questions on texts and images provided in a large corpus of PDF files. This solution is divided into 4 main notebooks, each notebook representing an independent step. Developers/Users can run this repository notebook by notebook, or through a single command via the `command line interface`. This solution contains information about ingesting text and image data from multiple PDF files into `OpenSearch Serverless Service`, Utilizes foundation models on bedrock to store text and image descriptions, convert them into embeddings. This solution also proposes another section of evaluating your own dataset of questions on the PDF files and human generated responses using evaluation frameworks like `ROUGE`, `Cosine Similarity` scores and subjective `LLM as a judge` evaluation metrics. 
+This example shows how to use an enhanced RAG workflow to generate responses to user questions from multiple`PDF files`. This repository provides a solution to generate accurate responses to user questions on texts, images, graphs, charts and other content provided in a large corpus of PDF files. This solution is divided into 4 main notebooks, each notebook representing an independent step. Developers/Users can run this repository notebook by notebook, or through a single command via the `command line interface`. This solution contains information about ingesting text and image data from multiple PDF files into `OpenSearch Serverlesn bedrock ts Service`, Utilizes foundation models oo store text and image descriptions, convert them into embeddings, and gets inference from different text and image indexes. This solution also proposes another solution for evaluating your own dataset of questions on the PDF files containing pre existing target responses/ground truth using evaluation frameworks like `ROUGE`, `Cosine Similarity` scores and subjective methods like `LLM as a judge` evaluation metrics. 
 
 Additionally, this repo also shows how to use [LiteLLM](https://github.com/BerriAI/litellm) for interfacing with Bedrock and [Ray](https://github.com/ray-project/ray) for running Bedrock inference concurrently in an asynchronous manner.
 
 ## Workflow
 
-The following steps describe how this solution works.
+The following steps describe how this solution works. View the architecture diagram for this solution below:
+
+<figure>
+<img src="images/architecture_diagram.jpg"
+id="fig-architecture-design" alt="Figure 1: PDF Multimodal architecture" />
+</figure>
 
 ### Data Preparation - Ingest and store PDFs using text and image files
 
-1. In this directory, we provide with an option to use a publicly available [AWS whitepaper]('https://docs.aws.amazon.com/pdfs/whitepapers/latest/ml-best-practices-healthcare-life-sciences/ml-best-practices-healthcare-life-sciences.pdf#ml-best-practices-healthcare-life-sciences') as a PDF file on `machine learning best practices for healthcare life sciences`. If you want to bring your own custom PDF files, or URLs, or a combination of both, then mention them in the ['config.yaml']('config.yaml') file in the `content_info` section under `pdf_local_files`.
+1. In this directory, we provide with an option to use a publicly available [AWS whitepaper]('https://docs.aws.amazon.com/pdfs/whitepapers/latest/ml-best-practices-healthcare-life-sciences/ml-best-practices-healthcare-life-sciences.pdf#ml-best-practices-healthcare-life-sciences') as a PDF file on `machine learning best practices for healthcare life sciences`. If you want to bring your own custom PDF files, URLs, or a combination of both, then mention them in the ['config.yaml']('config.yaml') file in the `content_info` section under `pdf_local_files` as given below:
 
-1. The [`1_data_prep_pdf_files.ipynb`](Blog4-PDF-TitanEmbeddings/notebooks/1_data_prep_pdf_files.ipynb) notebook handles data preparation for `PDF files`. It utilizes the PDF files available in the `pdf_data` directory, extracts text from each page of the PDF file using the `PyPDF2` library and storing each in a `.txt` file. It converts each page in the PDF file into an image and crops it in 4 parts: `2 horizontal` and `2 vertical` halves and stores it as `.jpg` files based on how many parts a user wants to split the image into and stores the extracted texts and images in an S3 bucket for further analytics and RAG workflow purposes.
+``` {.yaml}
+# content information: pdf files and slide decks
+content_info:
+  content_type: pdf 
+  pdf_local_files:
+  - https://docs.aws.amazon.com/pdfs/whitepapers/latest/ml-best-practices-healthcare-life-sciences/ml-best-practices-healthcare-life-sciences.pdf#ml-best-practices-healthcare-life-sciences
 
-The user has the flexibility to choose from the following options to crop the image (or the `pdf page` as an image):
+```
 
-  1. Crop the `pdf image` vertically into two halves: a left half and a right half
-  1. Crop the `pdf image` horizontally into two halves: an upper half and a lower half
-  1. Crop the `pdf image` both horizontally and vertically in 4 parts
-  1. Not crop the `pdf image` at all and save the PDF page as a single image.
-  1. Control the image resolution.
+1. The [`1_data_prep_pdf_files.ipynb`](Blog4-PDF-TitanEmbeddings/notebooks/1_data_prep_pdf_files.ipynb) notebook handles data preparation for `PDF files`. It utilizes the PDF files available in the `pdf_data` directory, extracts text from each page of the PDF file using the `PyPDF2` library and storing each in a `.txt` file. It converts each page in the PDF file into an image and crops it in 4 parts: `2 horizontal` and `2 vertical` halves and stores it as `.jpg` files based on how many parts a user wants to split the image into and stores the extracted texts and images in an S3 bucket for further analytics and RAG workflow purposes. 
+
+The user has the flexibility to choose from the following options to crop the image (or the `pdf page` as an image) as provided in the `page_split_imgs` section of the config file:
+
+``` {.yaml}
+page_split_imgs: 
+  horizontal_split: no
+  vertical_split: no
+  image_scale: 3
+```
+
+  1. If you want to crop the `pdf image` vertically into two halves: a left half and a right half, set the `vertical_split` to yes.
+  1. If you want to crop the `pdf image` horizontally into two halves: an upper half and a lower half, set the `horizontal_split` to yes.
+  1. If you want to crop the `pdf image` both horizontally and vertically in 4 parts, set both the `horizontal_split` and `vertical_split` to yes.
+  1. If you do not want to crop the `pdf image` at all and save the PDF page as a single image, set both to `no`
+  1. Control the image resolution in the `image_scale`.
 
   All of these configurations can be set via the `config.yaml` file in the `page_split_imgs` section. For the purpose of this repository, best results for PDF files were found with a whole image stored without cropping it, with the image resolution or `image_scale` set to a high score (in this case, 3).
 
-*This directory has been tested with splitting the images in all possible permutations. For different use cases, structure of PDF files, and content within those files, the best possible way to fix it might change. This directory was tested with PDF files that were all of the similar structure, heavy in text, bars, charts and graphs*
+*This directory has been tested with splitting the images in all possible permutations. For different use cases, PDF file structure, and content within those files, the best possible way to crop the images might change. This directory was tested with PDF files that were all of the similar structure, heavy in text, bars, charts and graphs.*
 
 After extracting all of the texts and images from PDF files in separate text and image files, the files are sent to `Amazon S3` that provides a secure location for an enterprise to store these images and a multimodal model can read the texts/images directly from the S3 bucket.
 
 ### Data Ingestion - Storing the `Image` and `Text` files in separate indexes as embeddings
 
-1. This portion of the workflow (notebook: [Blog4-PDF-TitanEmbeddings/notebooks/2_data_ingestion.ipynb](Blog4-PDF-TitanEmbeddings/notebooks/2_data_ingestion.ipynb)) downloads the images and text files corresponding to the `pdf file` that we uploaded into Amazon S3 in the [1_data_prep_pdf_files.ipynb](Blog4-PDF-TitanEmbeddings/notebooks/1_data_prep_pdf_files.ipynb) notebook, get text description from `images` and extract text from `text files`, convert both into embeddings and then ingest these embeddings into a vector database i.e. [Amazon OpenSearch Service Serverless](https://aws.amazon.com/opensearch-service/features/serverless/) in two separate indexes. One `text only` index for text based content in the PDF file and one `image only` index for images stored from the file.
+1. This portion of the workflow (notebook: [Blog4-PDF-TitanEmbeddings/notebooks/2_data_ingestion.ipynb](Blog4-PDF-TitanEmbeddings/notebooks/2_data_ingestion.ipynb)) downloads the images and text files corresponding to the `pdf file` that we uploaded into Amazon S3 in the [1_data_prep_pdf_files.ipynb](Blog4-PDF-TitanEmbeddings/notebooks/1_data_prep_pdf_files.ipynb) notebook. In this notebook, we get the text description from `images` using Claude 3 Sonnet and extract text from `text files` using `NLTK` and `PyPDF`, convert both into embeddings and then ingest these embeddings into a vector database i.e. [Amazon OpenSearch Service Serverless](https://aws.amazon.com/opensearch-service/features/serverless/) in two separate indexes (One `text only` index for text based content in the PDF file and one `image only` index for images stored from the file).
 
 1. We use the [Anthropic’s Claude 3 Sonnet foundation model](https://aws.amazon.com/about-aws/whats-new/2024/03/anthropics-claude-3-sonnet-model-amazon-bedrock/) available on Bedrock to convert image to text descriptions.
 
-1. We use the text extracted from each pdf page as is and convert them into embeddings using [Amazon Titan Text Embeddings](https://docs.aws.amazon.com/bedrock/latest/userguide/titan-embedding-models.html) and stored in a `text` index. 
+1. We use the text extracted from each pdf page as is using the [_PyPDF](https://pypi.org/project/pypdf/)_ library and convert them into embeddings using [Amazon Titan Text Embeddings](https://docs.aws.amazon.com/bedrock/latest/userguide/titan-embedding-models.html) and store them in a `text` only index in OpenSearch Serveless. 
 
-1. Each image file is first described using `Claude Sonnet` and then the embeddings of the text description of that image is stored in an `image index`.
+1. Each image file is first described using _Claude 3 Sonnet_ and then the embeddings of the image description are stored in an `image` only index in OpenSearch Serveless.
 
-1. We use an `entities` field in the `index body metadata` to store entities from both images and texts in their respective `image and text indexes`. The entities from images are extracted using `Claude Sonnet` and entities from texts extracted files using `nltk`. The purpose of extracting these entities is to later use them as a `knn search pre-filter` and use hybrid search based on extracted metadata to improve the quality of the search.
+1. We use an `entities` field in the index body `metadata` to store entities from both images and texts in their respective `image and text indexes`. In this example, Entities are names of people, organizations, products and other key elements in the text. The entities from images are extracted using _Claude 3 Sonnet_ and entities from texts extracted files using `NLTK`. The purpose of extracting these entities is to later use them as a _prefilter_ to only retrieve relevant documents that have entities matching the entities from the user question, further enhancing the accuracy of the response.
 
 1. The embeddings are then ingested into OpenSearch Service Serverless using the [Amazon OpenSearch Ingestion](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/ingestion.html) pipeline. We ingest the embeddings into an OpenSearch Serverless index via the OpenSearch Ingestion API separately for text and images.
 
-1. Both the image and text content that is posted to the `OSI endpoint` is also stored locally as `json files` containing the text extracted from text files, image description of images, entities for both content types, file names, page numbers and file types for further evaluation and analytical purposes.
+1. Both the image and text content is posted to the `OSI endpoint` and is stored locally as `json files` containing the text extracted from text files, image description of images, entities for both content types, file names, page numbers and file types for further evaluation and analytical purposes.
 
-An example of a prompt that is used to get entities from an Image using `Claude Sonnet`:
+An example of a prompt that is used to get entities from an Image using _Claude 3 Sonnet_:
 
 ```
 entity_extraction_prompt: str = """
@@ -66,25 +87,68 @@ Now based on the image, create a list of these entities. Your response should be
 
 ### Enhanced Multimodal Retrieval Augumented Generation (RAG) Inference
 
-1. This notebook ['3_rag_inference.ipynb'](Blog4-PDF-TitanEmbeddings/notebooks/3_rag_inference.ipynb) performs several steps in a pipeline structure to get accurate results based on user provided questions. This step takes in a user question, and extracts entities from that question. It uses the entities from the question, performs `prefiltering` and extracts the top `k` hits from the index (for both the text and the image index) based on the `entities matching`. This step helps retrieve the most accurate results and relevant docs based on entities that are matches from the question to the `metadata entities` that were stored during the `data ingestion step` for both texts and images.
+1. The ['3_rag_inference.ipynb'](Blog4-PDF-TitanEmbeddings/notebooks/3_rag_inference.ipynb) notebook performs several steps in a RAG pipeline to get accurate results based on user provided questions. This step takes in a user question, and extracts entities from that question using _Claude 3_. It uses the entities from the question to perform a `prefilter` by fetching relevant documents that have entities in its `metadata` that matches the entities from the user question. This step helps retrieve the most accurate results and relevant docs based on entities that matches the question entities. It then performs the following steps:
 
-1. Uses an `LLM in the loop` to go over each `k` hit after vector retrieval, checks for if the answer to the question is given in that hit and if not, moves to the next `hit` until the answer is found. If the answer is not found in any, it returns `I don't know`.
+1. Uses an `LLM in the loop` to go over each `k` hit (value of `k` is configurable in the config file) after vector retrieval, checks for if the answer to the question is given in that hit and if not, moves to the next `hit` until the answer is found. If the answer is not found in any, it returns `I don't know`.
 
-1. Uses an `eval dataset` that a user provides with a question bank (in the [`eval_data directory`](eval_data/) as a `csv`/`xls`/`xlsx` file) containing questions and target responses to those questions. It iterates through each question and queries the `text` and the `image indexes` to look for answers to the questions in the evaluation dataset.
+    1. For the text index, _Claude 3 Sonnet_ is used to check whether the question has the answer contained in the text extracted. If not, the LLM returns a "not found" and moves to the next text retrieval from the text index.
+    
+    1. For the image index, _Claude 3 Sonnet_ is used to check whether the answer to the question is provided in the image description. If not, Claude searches for the answer directly in the image using the image file path of the fetched image description. If the answer is not found in either, the LLM responds with a "not found" and moves to the next relevant hit to search for the answer.
+    
+    1. All valid responses (that are not "not found") that are fetched in this inference pipeline from both indexes are added to the context. The final context is used by a final LLM call to get the final combined response.
 
-1. During retrieval, answers are searched from both, the `text` and the `image` index to provide a combined answer.
+1. Uses an `eval dataset` that a user provides with a question bank. To use your own evaluation dataset, mention the name of your evaluation file in the [`eval_data directory`](eval_data/). Supported file formats are `csv`/`xls`/`xlsx` files. This file contains questions and target responses to those questions (that act as ground truth). Change the `question_key` variable with the column in your dataset that contains the user questions, and the `target_response_key` to the column that contains ground truth to the questions.
+
+```{.yaml}
+eval_qna_dataset_info:
+  dir_name: eval_data
+  eval_dataset_name: <name-of-your-evaluation-dataset.csv/xlsx/xls>
+  # set 'is_given' to no if the eval dataset is not given
+  is_given: Yes
+  # this is the key/column name in the df that represents
+  # the user question/query
+  question_key: Query
+  # This is the ground truth that the user provides in the dataset to all of the questions
+  target_response_key: Response
+```
+
+1. This notebook goes through each question in the evaluation dataset, and uses the text only, image only and both indexes combined to provide responses to user questions and appends all the responses to a new data frame.
 
 1. The retrieved results are stored in the [`metrics`](metrics/) directory for further evaluations.
 
 ### Multimodal RAG Evaluation - `ROUGE`, `Cosine Similarity` & `LLM as a judge`
 
-1. This notebook ['4_rag_evaluation.ipynb'](Blog4-PDF-TitanEmbeddings/notebooks/4_rag_evaluation.ipynb) uses the CSV file generated in the previous notebook to run evaluations on each response from the `image`, `text`, and `combined` indexes.
+1. This notebook ['4_rag_evaluation.ipynb'](Blog4-PDF-TitanEmbeddings/notebooks/4_rag_evaluation.ipynb) uses the CSV file generated in the `3_rag_inference.ipynb` notebook to run evaluations on each response from the `image`, `text`, and `combined` indexes.
 
 1. It records the `ROUGE` and `Cosine Similarity` scores. For subjective evaluation, this notebook uses an `LLM as a judge`(in this case, ClaudeV3 Sonnet) in the loop to check for the best match answer given the `target response` and the `questions` provided by the user.
 
-1. Records the results for all kinds of responses from `text only index`, `image only index`, and `combined` (from both the text as well as the image index) from `OpenSearch`
+1. Records the evaluation results for responses from `text only index`, `image only index`, and `combined` indexes from `OpenSearch`
 
-This notebook then gives an overview of an `LLM as a judge pick rate` that shows which index response was picked as the best answer to the user question and why.
+1. This notebook then gives an overview of an `LLM as a judge pick rate` that shows which index response was picked as the most optimal strategy to use to correctly answer the user question and why.
+
+1. This notebook uses _Claude 3 Sonnet_ as the LLM that acts as a judge. The prompt template for this LLM as a judge is in the [prompt_templates/eval_template.txt](prompt_templates/eval_template.txt) directory as follows:
+
+```
+Human: Your job is to find the best match answer to a question in the <question></question> tags based on the response candidates in the <candidate_responses></candidate_responses> fields. From the response candidates given below, find which the one that matches the target response in the <target_response></target_response> tags the best in terms of correctness, and explanation to the user question.
+Put the best match response, response source and explanation for selecting the answer and not selecting other answers in a JSON as within 3 elements: "best_match_response", "response_source", and "explanation".
+Your explanation should include both response source and answer so that it is simple to understand which response candidate was generated by which response source and why it was or was not selected.
+
+<question>
+{question}
+</question>
+
+<target_response>
+{original_response}
+</target_response>
+
+<candidate_responses>
+{candidate_responses}
+</candidate_responses>
+
+Do not select the target_response as the best_match_response. Only choose from the response candidates above.
+
+Assistant: Here is the response in json:
+```
 
 ## Contents
 
@@ -128,6 +192,17 @@ python main.py
 ```
 
 You could also run the notebooks manually in the order given above.
+
+## Demo
+
+View an example demo below for this solution. This uses a publicly available AWS whitepaper:
+
+<figure class="video_container">
+ <video controls="true" allowfullscreen="true">
+ <source src="images/multimodal_pdf_demo.mov" type="video/mov">
+ </video>
+</figure>
+
 
 ## Tip
 
