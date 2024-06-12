@@ -34,16 +34,26 @@ pdf_dir_info:
   judge_model_eval_completions: data/model_eval_completions
   llm_as_a_judge_completions: llm_as_a_judge_completions.csv
   index_response_distribution: index_response_distribution.csv
+  # save the txt files with the final llm analysis
+  all_explanations: all_explanations.txt
+  final_summary_analysis: final_summary_analysis.txt
+  claude_final_summary_eval_prompt: claude_final_summary_prompt.txt
+  
 
 # Set the steps you want to run all via a python script to get the 
 # response to your evaluation data/save the embeddings, and prepare the 
 # data for multimodal image RAG inference
 run_steps:
-  1_data_prep_pdf_files.ipynb: yes
-  1_data_prep_slide_deck.ipynb: yes
-  2_data_ingestion.ipynb: yes
+  1_data_prep_pdf_files.ipynb: no
+  # set this to yes if you are running a slide deck instead of a PDF - this notebook
+  # is work in progress
+  1_data_prep_slide_deck.ipynb: no
+  2_data_ingestion.ipynb: no
   3_rag_inference.ipynb: yes
   4_rag_evaluation.ipynb: yes
+  # set this step to 'yes' only when you want to delete the indexes and images/texts from the 
+  # s3 bucket to store new data in both from scratch
+  5_cleanup.ipynb: no
 
 metrics_dir:
   dir_name: metrics
@@ -113,7 +123,7 @@ encoding_info:
 eval_qna_dataset_info:
   dir_name: eval_data
   # enter the file name of your evaluation dataset. This can be a .csv or a .xls/.xlsx file
-  eval_dataset_name: dummy_data_file.xlsx
+  eval_dataset_name: dummy_data_file.csv
   # set 'is_given' to no if the eval dataset is not given
   is_given: Yes
   # this is the key/column name in the df that represents
@@ -142,6 +152,11 @@ embeddings_model_info:
   - 'text_response'
   - 'img_response'
 
+# this LLM is used to gather all of the evaluations and explanations from 
+# the LLM as a judge and provide a summary analysis of which strategy to use
+# for the multimodal use case (image only responses/text only responses/or responses
+# from both of the indexes combined)
+final_llm_summarize_eval_analysis: anthropic.claude-3-sonnet-20240229-v1:0
 
 QnA_generator_prompt: |
   "Human: Based on the text description provided in <text_desc></text_desc> tags, generate a list of five to 10 questions. Only refer to the context in the <text_desc> tags, and do not provide questions that are not related to the context provided. Your response should be in a JSON format containing two elements: 'question' and 'answer'. The question should be directly related to the context provided in the <text_desc> tags and the answer should be the answer to that question from the <text_desc> context. Do not make up an answer.If you do not know the answer to the question just say that you don't know the answer. Don't try to make up an answer or a question. Refer to the context below:

@@ -159,6 +159,8 @@ The example consists of 4 Jupyter notebooks and a couple of Python scripts:
 
 - ['4_rag_evaluation.ipynb'](Blog4-PDF-TitanEmbeddings/notebooks/4_rag_evaluation.ipynb) - This notebook summarizes the metrics and creates the results in human readable format. It gives quantitative (**_ROUGE & Cosine Similarity_**) and Subjective (**_LLM acts as a Judge_**) metrics to get the most optimal strategy to use for Multimodal RAG workflows.
 
+- ['5_cleanup.ipynb'](Blog4-PDF-TitanEmbeddings/notebooks/5_cleanup.ipynb) - This notebook cleans up the index and S3 resources. This notebook is for users to delete the index, the image and text files from the S3 bucket, to rerun this solution with new indexes, embeddings and data in S3 from the scratch.
+
 - [main.py](./main.py) - Script to run all the notebooks through a single command. See section on `Running`.
 
 - [config.yml](./config.yml) - contains configuration parameters such as directory path, model information etc. for this solution. ***The pricing information in the [`config.yml`](./config.yml) is subject to change, please always confirm Bedrock pricing from the [_Amazon Bedrock Pricing_](https://aws.amazon.com/bedrock/pricing/) page***.
@@ -172,8 +174,8 @@ The dataset used in this repo is a publicly available AWS Whitepaper which is us
 It is best to create a separate conda environment to run this solution using the commands provided below:
 
 ```
-conda create --name model_eval_bedrock_py311 -y python=3.11 ipykernel
-conda activate model_eval_bedrock_py311
+conda create --name multimodal_python311 -y python=3.11 ipykernel
+conda activate multimodal_python311
 pip install -r requirements.txt -U
 ```
 

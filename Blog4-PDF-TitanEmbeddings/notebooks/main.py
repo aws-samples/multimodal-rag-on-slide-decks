@@ -81,7 +81,7 @@ def run_notebooks(config_file: str) -> None:
         else:
             logging.info(f"Skipping {step} as it is not marked for execution")
 
-    logger.info(f"Multimodal enhanced RAG workflow is complete. View results in the local {config['metrics_dir']['metrics']} directory.")
+    logger.info(f"Multimodal enhanced RAG workflow is complete. View results in the local metrics directory.")
 
 
 # main function to run all of the notebooks through a single file

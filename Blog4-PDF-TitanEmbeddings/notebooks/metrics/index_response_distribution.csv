@@ -1,3 +1,4 @@
 index,index_pick_rate
-combined,70.0
-img_only,30.0
+combined,80.0
+text_only,10.0
+img_only,10.0

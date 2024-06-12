@@ -17,4 +17,5 @@ packaging>=22.0
 rouge-score==0.1.2
 docutils
 requests
+openpyxl
 requests-auth-aws-sigv4

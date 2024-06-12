@@ -1,0 +1,12 @@
+﻿Query,Response
+What are the benefits of Machine learning?,"Machine learning helps with continually learning  from real-world data, and its capability to improve its performance"
+What are the Trade-offs between performance and model interpretability graph?,"linear regression and decision trees have higher interpretability but lower accuracy, neural nets have higher accuracy but lower interpretability"
+"In Operationalizing AI/ML workloads, what comes under 'Prepare for production'?","Develop infra/resources, quality assurance/testing, containerization, CI/CD"
+How can customers encrypt the data for security?,AWS KMS
+What are the phases of a machine learning lifecycle?,"Define a scope, prepare data, model development, model deployment, and model monitoring/maintainance."
+What are the differences between SageMaker Ground Truth and Data Wrangler?,Ground truth is used for data labeling and data wrangler simplifies the process of data preparation and feature engineering.
+What is model interpretability?,"Interpretability is the degree to which a human can understand the cause of a decision. The
+higher the interpretability of an ML model, the easier it is to comprehend the model’s predictions."
+"For model monitoring, after an ML model has been deployed to a product environment, what is it important to monitor the model based on?",Infrastructure and Performance
+"In Operationalizing AI/ML workloads, what comes under 'Development'?","Data extraction, data cleaning/preprocessing, feature engineering, model training and evaluation and human in the loop/model review and approval"
+What are the steps in the Training pipeline?,"train model, use AWS Glue, Use Amazon SageMaker to train the ensemble models, Training results Queue, and then use the Endpoint update handler."
