@@ -17,7 +17,7 @@ content_info:
 
 ```
 
-1. **Evaluation Dataset**: Users have an option to use an `eval dataset` that with a question bank containing questions and ground truth answers on content from the PDF files provided. To use your own evaluation dataset, mention the name of your evaluation file in `eval_dataset_name` in the `eval_qna_dataset_info` section in the config file. Place this evaluation dataset in the [`eval_data directory`](eval_data/). Supported file formats are `csv`/`xls`/`xlsx` files. Change the `question_key` with the name of the column in your dataset that contains the questions, and the `target_response_key` to the name of the column that contains ground truth to the questions.
+2. **Evaluation Dataset**: Users have an option to use an `eval dataset` that with a question bank containing questions and ground truth answers on content from the PDF files provided. To use your own evaluation dataset, mention the name of your evaluation file in `eval_dataset_name` in the `eval_qna_dataset_info` section in the config file. Place this evaluation dataset in the [`eval_data directory`](eval_data/). Supported file formats are `csv`/`xls`/`xlsx` files. Change the `question_key` with the name of the column in your dataset that contains the questions, and the `target_response_key` to the name of the column that contains ground truth to the questions.
 
 ```{.yaml}
 eval_qna_dataset_info:
@@ -29,7 +29,7 @@ eval_qna_dataset_info:
   target_response_key: Response
 ```
 
-1. **Bring your own images** If you are bringing in your own images that you want to upload in addition to the PDF files, place those images in a directory, specify the name of that directory in the `manually_saved_images_path` in the `pdf_dir_info` section. Set the `manually_saved_images_provided` to `yes`. This will include the images you bring in manually to this POC.
+3. **Bring your own images** If you are bringing in your own images that you want to upload in addition to the PDF files, place those images in a directory, specify the name of that directory in the `manually_saved_images_path` in the `pdf_dir_info` section. Set the `manually_saved_images_provided` to `yes`. This will include the images you bring in manually to this POC.
 
 ``` {.yaml}
 pdf_dir_info:
