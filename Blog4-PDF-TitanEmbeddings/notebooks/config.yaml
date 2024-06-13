@@ -30,6 +30,10 @@ pdf_dir_info:
   prompts: prompt_templates
   # save the images manually from the pdf if need be
   manually_saved_images_path: manually_saved_imgs
+  # if you want to use the manually uploaded images 
+  # (that you extract from the document, for example, screenshots), 
+  # set "manually_saved_images_provided" to yes 
+  manually_saved_images_provided: no
   processed_prompts_for_eval: processed_llm_judge_evaluation_prompts.csv
   judge_model_eval_completions: data/model_eval_completions
   llm_as_a_judge_completions: llm_as_a_judge_completions.csv
@@ -75,9 +79,6 @@ page_split_imgs:
   # set the image resolution
   image_scale: 3
 
-# if you want to use the manually uploaded images (that you extract from the document, for example, screenshots), set "manually_saved_images_provided" to yes 
-manually_saved_images_provided: no
-
 # content information: pdf files and slide decks
 content_info:
   # if you are using pdfs, then your content type is 'pdf', else it is 'slide_deck'
@@ -87,7 +88,8 @@ content_info:
   pdf_local_files:
   # this pdf file is fetched from the publicly available on the aws whitepaper's website: 
   # https://aws.amazon.com/whitepapers/?whitepapers-main.sort-by=item.additionalFields.sortDate&whitepapers-main.sort-order=desc&awsf.whitepapers-content-type=*all&awsf.whitepapers-global-methodology=*all&awsf.whitepapers-tech-category=*all&awsf.whitepapers-industries=*all&awsf.whitepapers-business-category=*all&whitepapers-main.q=AI&whitepapers-main.q_operator=AND
-  - https://docs.aws.amazon.com/pdfs/whitepapers/latest/ml-best-practices-healthcare-life-sciences/ml-best-practices-healthcare-life-sciences.pdf#ml-best-practices-healthcare-life-sciences
+  # - https://docs.aws.amazon.com/pdfs/whitepapers/latest/ml-best-practices-healthcare-life-sciences/ml-best-practices-healthcare-life-sciences.pdf#ml-best-practices-healthcare-life-sciences
+  - Amazon_rec.pdf
   # - <list your manually uploaded pdf file names in pdf_data directory>
   
   slide_deck:
