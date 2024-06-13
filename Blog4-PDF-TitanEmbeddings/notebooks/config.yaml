@@ -88,8 +88,7 @@ content_info:
   pdf_local_files:
   # this pdf file is fetched from the publicly available on the aws whitepaper's website: 
   # https://aws.amazon.com/whitepapers/?whitepapers-main.sort-by=item.additionalFields.sortDate&whitepapers-main.sort-order=desc&awsf.whitepapers-content-type=*all&awsf.whitepapers-global-methodology=*all&awsf.whitepapers-tech-category=*all&awsf.whitepapers-industries=*all&awsf.whitepapers-business-category=*all&whitepapers-main.q=AI&whitepapers-main.q_operator=AND
-  # - https://docs.aws.amazon.com/pdfs/whitepapers/latest/ml-best-practices-healthcare-life-sciences/ml-best-practices-healthcare-life-sciences.pdf#ml-best-practices-healthcare-life-sciences
-  - Amazon_rec.pdf
+  - https://docs.aws.amazon.com/pdfs/whitepapers/latest/ml-best-practices-healthcare-life-sciences/ml-best-practices-healthcare-life-sciences.pdf#ml-best-practices-healthcare-life-sciences
   # - <list your manually uploaded pdf file names in pdf_data directory>
   
   slide_deck:
