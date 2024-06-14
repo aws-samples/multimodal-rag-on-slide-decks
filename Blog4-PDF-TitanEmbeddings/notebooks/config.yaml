@@ -88,7 +88,13 @@ content_info:
   pdf_local_files:
   # this pdf file is fetched from the publicly available on the aws whitepaper's website: 
   # https://aws.amazon.com/whitepapers/?whitepapers-main.sort-by=item.additionalFields.sortDate&whitepapers-main.sort-order=desc&awsf.whitepapers-content-type=*all&awsf.whitepapers-global-methodology=*all&awsf.whitepapers-tech-category=*all&awsf.whitepapers-industries=*all&awsf.whitepapers-business-category=*all&whitepapers-main.q=AI&whitepapers-main.q_operator=AND
-  - https://docs.aws.amazon.com/pdfs/whitepapers/latest/ml-best-practices-healthcare-life-sciences/ml-best-practices-healthcare-life-sciences.pdf#ml-best-practices-healthcare-life-sciences
+  # - https://docs.aws.amazon.com/pdfs/whitepapers/latest/ml-best-practices-healthcare-life-sciences/ml-best-practices-healthcare-life-sciences.pdf#ml-best-practices-healthcare-life-sciences
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
   # - <list your manually uploaded pdf file names in pdf_data directory>
   
   slide_deck:
@@ -158,6 +164,14 @@ embeddings_model_info:
 # for the multimodal use case (image only responses/text only responses/or responses
 # from both of the indexes combined)
 final_llm_summarize_eval_analysis: anthropic.claude-3-sonnet-20240229-v1:0
+
+entity_extraction_prompt_images: |
+  "Please provide a detailed description of the entities present in the image. Entities, are specific pieces of information or objects within a text that carry particular significance. These can be real-world entities like names of people, places, organizations, or dates. Refer to the types of entities: Named entities: These include names of people, organizations, locations, and dates. You can have specific identifiers within this, such as person names or person occupations.
+  Custom entities: These are entities specific to a particular application or domain, such as product names, medical terms, or technical jargon.
+  Temporal entities: These are entities related to time, such as dates, times, and durations.
+  Product entities: Names of products might be grouped together into product entities.
+  Data entities: Names of the data and metrics present. This includes names of metrics in charts, graphs and tables, and throughout the image.
+  Now based on the image, create a list of these entities. Your response should be accurate. Do not make up an answer."
 
 QnA_generator_prompt: |
   "Human: Based on the text description provided in <text_desc></text_desc> tags, generate a list of five to 10 questions. Only refer to the context in the <text_desc> tags, and do not provide questions that are not related to the context provided. Your response should be in a JSON format containing two elements: 'question' and 'answer'. The question should be directly related to the context provided in the <text_desc> tags and the answer should be the answer to that question from the <text_desc> context. Do not make up an answer.If you do not know the answer to the question just say that you don't know the answer. Don't try to make up an answer or a question. Refer to the context below:
