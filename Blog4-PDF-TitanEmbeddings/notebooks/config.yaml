@@ -88,13 +88,7 @@ content_info:
   pdf_local_files:
   # this pdf file is fetched from the publicly available on the aws whitepaper's website: 
   # https://aws.amazon.com/whitepapers/?whitepapers-main.sort-by=item.additionalFields.sortDate&whitepapers-main.sort-order=desc&awsf.whitepapers-content-type=*all&awsf.whitepapers-global-methodology=*all&awsf.whitepapers-tech-category=*all&awsf.whitepapers-industries=*all&awsf.whitepapers-business-category=*all&whitepapers-main.q=AI&whitepapers-main.q_operator=AND
-  # - https://docs.aws.amazon.com/pdfs/whitepapers/latest/ml-best-practices-healthcare-life-sciences/ml-best-practices-healthcare-life-sciences.pdf#ml-best-practices-healthcare-life-sciences
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - https://docs.aws.amazon.com/pdfs/whitepapers/latest/ml-best-practices-healthcare-life-sciences/ml-best-practices-healthcare-life-sciences.pdf#ml-best-practices-healthcare-life-sciences
   # - <list your manually uploaded pdf file names in pdf_data directory>
   
   slide_deck:
@@ -130,7 +124,7 @@ encoding_info:
 eval_qna_dataset_info:
   dir_name: eval_data
   # enter the file name of your evaluation dataset. This can be a .csv or a .xls/.xlsx file
-  eval_dataset_name: dummy_data_file.csv
+  eval_dataset_name: newds.csv
   # set 'is_given' to no if the eval dataset is not given
   is_given: Yes
   # this is the key/column name in the df that represents
@@ -140,13 +134,37 @@ eval_qna_dataset_info:
   updated_eval_file: updated_eval_dataset.csv
   prompt_template: eval_template.txt
 
-k_count_retrieval: 4
+# These are the paths to the prompts that are used in the process
+# of generating responses from the image and the text indices in the
+# run inference step. Additional, this contains an evaluation prompt that 
+# is used by the LLM as a judge while making subjective evaluations of 
+# which index strategy generates the most optimal and accurate responses to the user
+# questions based on correctness and relevancy
+search_response_prompt_templates:
+  # this prompt template is used to search for responses in the image description as well as
+  # in the image directly during the RAG inference pipeline
+  search_in_images_template: prompt_templates/retrieve_answer_from_images_prompt.txt
+  # this prompt template is used to retrieve answers from the texts that are extracted from the 
+  # PDF pages
+  search_in_text_template: prompt_templates/retrieve_answer_from_texts_prompt.txt
+  # this prompt template is used to extract entities/metadata from the user question in the 
+  # process of prefiltering to get only the matching documents from the index with similar metadata
+  extract_question_entities_prompt: prompt_templates/extract_question_entities_prompt.txt
+  # this prompt template is used by a final LLM call to give a combined response from both the 
+  # indices
+  final_combined_llm_response_prompt: prompt_templates/final_combined_response_prompt_template.txt
+  
+# This is the 'k' parameter. Increase or decrease it for your use case
+k_count_retrieval: 5
 
+# these are the inference parameters used by the bedrock model while generating 
+# inferences during the process of the RAG workflow
 inference_parameters_for_explanations:
   temperature: 0.1
   caching: False
   max_tokens: 500
 
+# information on the embeddings model, including the ROUGE and Cosine Similarity scores
 embeddings_model_info:
   model: amazon.titan-embed-text-v1
   max_text_len_for_embedding: 500
@@ -165,6 +183,10 @@ embeddings_model_info:
 # from both of the indexes combined)
 final_llm_summarize_eval_analysis: anthropic.claude-3-sonnet-20240229-v1:0
 
+# This prompt is used by Claude 3 Sonnet to generate entities from the images that are 
+# extracted from the pdf files. Change this to match your domain tailored data so that
+# during the retrieval process, the prefilter happens effectively and matches metadata
+# from the user question to the domain tailored metadata of your documents
 entity_extraction_prompt_images: |
   "Please provide a detailed description of the entities present in the image. Entities, are specific pieces of information or objects within a text that carry particular significance. These can be real-world entities like names of people, places, organizations, or dates. Refer to the types of entities: Named entities: These include names of people, organizations, locations, and dates. You can have specific identifiers within this, such as person names or person occupations.
   Custom entities: These are entities specific to a particular application or domain, such as product names, medical terms, or technical jargon.
@@ -173,6 +195,8 @@ entity_extraction_prompt_images: |
   Data entities: Names of the data and metrics present. This includes names of metrics in charts, graphs and tables, and throughout the image.
   Now based on the image, create a list of these entities. Your response should be accurate. Do not make up an answer."
 
+# This prompt is used to generate a synthetic question answering bank from all of the 
+# data stored in OpenSearch serverless
 QnA_generator_prompt: |
   "Human: Based on the text description provided in <text_desc></text_desc> tags, generate a list of five to 10 questions. Only refer to the context in the <text_desc> tags, and do not provide questions that are not related to the context provided. Your response should be in a JSON format containing two elements: 'question' and 'answer'. The question should be directly related to the context provided in the <text_desc> tags and the answer should be the answer to that question from the <text_desc> context. Do not make up an answer.If you do not know the answer to the question just say that you don't know the answer. Don't try to make up an answer or a question. Refer to the context below:
   <text_desc>
@@ -180,6 +204,8 @@ QnA_generator_prompt: |
   </text_desc>
   Assistant: Sure, here are a list of Questions and Answers generated from the context in JSON format:"
   
+# Inference parameters used when questions are generated 
+# (Note: this is used outside of the RAG and evaluation pipeline in a separate notebook
 inference_parameters_for_qna_generation:
   temperature: 0.1
   caching: False

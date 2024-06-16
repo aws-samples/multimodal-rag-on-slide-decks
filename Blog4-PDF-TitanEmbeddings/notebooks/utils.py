@@ -2,47 +2,29 @@
 Utility functions for S3 and CloudFormation used by the rest of the code
 """
 import os
+import yaml
 import json
 import boto3
 import logging
 import botocore
 import numpy as np
 import globals as g
-from typing import List
+from pathlib import Path
+from typing import List, Dict
+from litellm import completion
 from sagemaker.s3 import S3Uploader
 
 logger = logging.getLogger(__name__)
 
 s3 = boto3.client('s3')
 
-question_entities_extraction_prompt: str = """
-Human: Your role is to extract entities from a question. Entities, are specific pieces of information or objects within a text that carry particular significance. These can be names of people, places, organizations, or dates. Include names of people, organizations, locations, and dates. These can be specific to a particular application or domain, such as product names, medical terms, or technical jargon. Mention names of products might be grouped together into product entities. Also mention data related entities in the question.
-
-Now, refer to the question below in the <question></question> tags and give the entities within it.
-
-<question>
-{question}
-</question>
-
-Your response should be concise and only contain the names of the entities, nothing else. Do not add any prefiller words. Your response should only contain entities from the question above. Also give what is being asked for in the question as an entity.
-
-Assistant: Sure, based on the context and the example provided, here are the entities extracted from the question: """
-
-llm_prompt: str = """
-
-Human: Use the context in the <summary></summary> tags to provide a answer to the question to the best of your abilities. If you cannot answer the question from the context then say I do not know, do not make up an answer.
-
-<question>
-{question}
-</question>
-
-<summary>
-{summary}
-</summary>
-
-Your answer should be in 1 sentence.
-
-Assistant: Here is my answer in 1 sentence based on the context provided:"""
+# global constants
+CONFIG_FILE_PATH = "config.yaml"
+# read the config yaml file
+fpath = CONFIG_FILE_PATH
+with open(fpath, 'r') as yaml_in:
+    config = yaml.safe_load(yaml_in)
+logger.info(f"config read from {fpath} -> {json.dumps(config, indent=2)}")
 
 
 def upload_to_s3(local_file_path:str, bucket_name: str, bucket_prefix:str) -> None:
@@ -54,7 +36,8 @@ def upload_to_s3(local_file_path:str, bucket_name: str, bucket_prefix:str) -> No
             logger.info(f"File {local_file_path} uploaded to {bucket_name}/{s3_key}.")
     except Exception as e:
         logger.error(f"error uploading file to S3: {e}")
-        
+
+
 def download_image_files_from_s3(bucket:str, bucket_image_prefix:str, local_image_dir:str, image_file_extn:str) -> List:
     images = s3.list_objects_v2(Bucket=bucket, Prefix=bucket_image_prefix)['Contents']
     local_file_paths: List = []
@@ -65,8 +48,8 @@ def download_image_files_from_s3(bucket:str, bucket_image_prefix:str, local_imag
             logger.info(f"downloaded {bucket}/{img['Key']} to {file_path}")
             local_file_paths.append(file_path)
     return local_file_paths 
-            
-            
+
+
 def get_cfn_outputs(stackname: str) -> List:  
     cfn = boto3.client('cloudformation')
     outputs = {}
@@ -77,15 +60,17 @@ def get_cfn_outputs(stackname: str) -> List:
         outputs[output['OutputKey']] = output['OutputValue']
     return outputs
 
+
 def get_bucket_name(stackname: str) -> str:
     outputs = get_cfn_outputs(stackname)
     bucketname = outputs['BucketName']
     return bucketname
 
+
 def get_text_embedding(bedrock: botocore.client, prompt_data: str) -> np.ndarray:
     body = json.dumps({
         "inputText": prompt_data,
-    })    
+    })
     try:
         response = bedrock.invoke_model(
             body=body, modelId=g.TITAN_MODEL_ID, accept=g.ACCEPT_ENCODING, contentType=g.CONTENT_ENCODING
@@ -99,44 +84,63 @@ def get_text_embedding(bedrock: botocore.client, prompt_data: str) -> np.ndarray
     return embedding
 
 
-
-def get_llm_response(bedrock: botocore.client, 
-                     question: str, 
+def get_llm_response(question: str, 
                      summary: str, 
-                     modelId: str = g.CLAUDE_MODEL_ID) -> str:
-    prompt = llm_prompt.format(question=question, summary=summary)
-
-    body = json.dumps(
-    {
-        "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": 1000,
-        "messages": [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt},
-                ],
-            }
-        ],
-    })
-
+                     modelId: str = g.CLAUDE_MODEL_ID) -> Dict:
+    """
+    This function takes in the prompt that checks whether the text file has a response to the question and if not, 
+    returns "not found" to move to the next hit.
+    """
+    final_llm_prompt: str = Path(config['search_response_prompt_templates']['final_combined_llm_response_prompt']).read_text()
+    prompt = final_llm_prompt.format(question=question, summary=summary)
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": prompt},
+            ],
+        }
+    ]
+    # suppress the litellm logger responses
+    lite_llm_logger = logging.getLogger('LiteLLM')
+    lite_llm_logger.setLevel(logging.CRITICAL)
+    ret = {
+        "exception": None,
+        "prompt": prompt,
+        "completion": None,
+        "completion_token_count": None,
+        "prompt_token_count": None,
+        "model_id": modelId
+    }
     try:
-        response = bedrock.invoke_model(
-        modelId=modelId,
-        body=body)
-
-        response_body = json.loads(response['body'].read().decode("utf-8"))
-        llm_response = response_body['content'][0]['text'].replace('"', "'")
-
+        response = completion(
+            model=modelId,
+            messages=messages,
+        )
+        # Suppress logging output
+        logging.getLogger('LiteLLM').setLevel(logging.CRITICAL)
+        # iterate through the entire model response
+        for idx, choice in enumerate(response.choices):
+            # extract the message and the message's content from litellm
+            if choice.message and choice.message.content:
+                # extract the response from the dict
+                ret["completion"] = choice.message.content.strip()
+        # Extract number of input and completion prompt tokens (this is the same structure for embeddings and text generation models on Amazon Bedrock)
+        ret['prompt_token_count'] = response.usage.prompt_tokens
+        ret['completion_token_count'] = response.usage.completion_tokens
+        # Extract latency in seconds
+        latency_ms = response._response_ms
+        ret['time_taken_in_seconds']  = latency_ms / 1000
     except Exception as e:
-        logger.error(f"exception while slide_text={summary[:10]}, exception={e}")
-        llm_response = None
+        logger.error(f"exception={e}")
+        ret["exception"] = e
+    return ret
 
-    return llm_response
 
 def get_question_entities(bedrock: botocore.client, 
                    question:str, 
                    modelId: str = g.CLAUDE_MODEL_ID) -> str:
+    question_entities_extraction_prompt: str = Path(config['search_response_prompt_templates']['extract_question_entities_prompt']).read_text()
     prompt = question_entities_extraction_prompt.format(question=question)
 
     body = json.dumps(

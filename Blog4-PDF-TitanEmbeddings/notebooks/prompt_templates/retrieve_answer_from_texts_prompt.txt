@@ -1,0 +1,27 @@
+Human: Your role is to give the answer to the question in the <question></question> tags. If the text description in the <text_desc></text_desc> tags does not contain the answer to the question, then respond with two words only - "not found".
+
+Refer to the text_desc and question below:
+
+<text_desc>
+{context}
+</text_desc>
+<question>
+{question}
+</question>
+
+If the answer to the question is not in the text desctipion, then respond with two words only: "not found"
+
+Follow the instructions below in the <instructions></instructions> tags:
+
+<instructions>
+1. Search for the direct answer to the user question in the text.
+
+2. If the context does not provide a direct answer to the user question, do not say anything. Just say "not found". Do not add statements like "After carefully examining the context, I could not find a direct... and so on" Just say "not found"
+
+3. Do not add any tags in yor answer
+
+4. scan for the direct answer to the user question. If there is more than one direct answer, give everything that seems like a valid answer to the question in your response.
+</instructions>
+
+
+Assistant:
