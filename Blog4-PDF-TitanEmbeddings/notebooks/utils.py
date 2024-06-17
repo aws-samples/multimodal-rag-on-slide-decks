@@ -110,7 +110,10 @@ def get_llm_response(question: str,
         "completion": None,
         "completion_token_count": None,
         "prompt_token_count": None,
-        "model_id": modelId
+        "model_id": modelId,
+        "time_taken_in_seconds": None,
+        "input_token_cost": None,
+        "output_token_cost": None,
     }
     try:
         response = completion(

@@ -3,7 +3,8 @@
 app_name: multi-modal-rag-bedrock
 
 aws:
-  region: us-west-2
+  # replace your region here
+  region: <your-aws-region>
   # adding the cfn stack name in the config.yml file in case users
   # deploy the template using their custom name
   cfn_stack_name: multi-modal-revised
@@ -124,13 +125,13 @@ encoding_info:
 eval_qna_dataset_info:
   dir_name: eval_data
   # enter the file name of your evaluation dataset. This can be a .csv or a .xls/.xlsx file
-  eval_dataset_name: newds.csv
+  eval_dataset_name: <your-eval-dataset-name>
   # set 'is_given' to no if the eval dataset is not given
   is_given: Yes
   # this is the key/column name in the df that represents
   # the user question/query
-  question_key: Query
-  target_response_key: Response
+  question_key: <question-column-name>
+  target_response_key: <response-column-name>
   updated_eval_file: updated_eval_dataset.csv
   prompt_template: eval_template.txt
 
