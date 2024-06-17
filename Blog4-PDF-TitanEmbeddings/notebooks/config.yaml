@@ -43,7 +43,7 @@ pdf_dir_info:
   all_explanations: all_explanations.txt
   final_summary_analysis: final_summary_analysis.txt
   # p95 metrics - for token counts and latency metrics during evaluation
-  p95_metrics_file: inference_latency_p95_summary.txt
+  p95_metrics_file: p95_summary_metrics.txt
   
 
 # Set the steps you want to run all via a python script to get the 
