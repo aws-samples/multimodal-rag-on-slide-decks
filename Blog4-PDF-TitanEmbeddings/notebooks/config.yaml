@@ -4,7 +4,7 @@ app_name: multi-modal-rag-bedrock
 
 aws:
   # replace your region here
-  region: <your-aws-region>
+  region: us-west-2
   # adding the cfn stack name in the config.yml file in case users
   # deploy the template using their custom name
   cfn_stack_name: multi-modal-revised
@@ -42,7 +42,6 @@ pdf_dir_info:
   # save the txt files with the final llm analysis
   all_explanations: all_explanations.txt
   final_summary_analysis: final_summary_analysis.txt
-  claude_final_summary_eval_prompt: claude_final_summary_prompt.txt
   
 
 # Set the steps you want to run all via a python script to get the 
@@ -125,13 +124,13 @@ encoding_info:
 eval_qna_dataset_info:
   dir_name: eval_data
   # enter the file name of your evaluation dataset. This can be a .csv or a .xls/.xlsx file
-  eval_dataset_name: <your-eval-dataset-name>
+  eval_dataset_name: dummy_data_file.csv
   # set 'is_given' to no if the eval dataset is not given
   is_given: Yes
   # this is the key/column name in the df that represents
   # the user question/query
-  question_key: <question-column-name>
-  target_response_key: <response-column-name>
+  question_key: Query
+  target_response_key: Response
   updated_eval_file: updated_eval_dataset.csv
   prompt_template: eval_template.txt
 
@@ -154,9 +153,12 @@ search_response_prompt_templates:
   # this prompt template is used by a final LLM call to give a combined response from both the 
   # indices
   final_combined_llm_response_prompt: prompt_templates/final_combined_response_prompt_template.txt
+  # this prompt template is used by claude to give a final summary analysis on which index strategy to use
+  # for this given dataset
+  final_llm_as_a_judge_summary_analysis: prompt_templates/claude_final_summary_analysis_prompt.txt
   
 # This is the 'k' parameter. Increase or decrease it for your use case
-k_count_retrieval: 5
+k_count_retrieval: 4
 
 # these are the inference parameters used by the bedrock model while generating 
 # inferences during the process of the RAG workflow
