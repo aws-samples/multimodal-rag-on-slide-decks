@@ -42,6 +42,8 @@ pdf_dir_info:
   # save the txt files with the final llm analysis
   all_explanations: all_explanations.txt
   final_summary_analysis: final_summary_analysis.txt
+  # p95 metrics - for token counts and latency metrics during evaluation
+  p95_metrics_file: inference_latency_p95_summary.txt
   
 
 # Set the steps you want to run all via a python script to get the 
