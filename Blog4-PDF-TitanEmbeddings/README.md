@@ -48,6 +48,8 @@ After the stack is created successfully, navigate to the stack’s
 `MultimodalCollectionEndpoint` and `OpenSearchPipelineEndpoint`, we will
 use it in the subsequent steps.
 
+***Note: Since this code is work in progress and has not been merged to main, switch to the _8-pipeline-for-pdf-file-support_ to use the latest version of the code. Navigate to the _Blog4-PDF-TitanEmbeddings_ folder.***
+
 ### Data Preparation - Ingest and store PDFs using text and image files
 
 1. The [1_data_prep_pdf_files.ipynb](notebooks/1_data_prep_pdf_files.ipynb) notebook handles data preparation for _PDF files_. It utilizes the PDF files mentioned in the config file, extracts text from each page of the PDF file using the `PyPDF2` library and stores each in a `.txt` file. It converts each page in the PDF file into an image and plans to crop it in 4 parts: _2 horizontal_ and _2 vertical_ halves and store it as `.jpg` files based on how many parts a user wants to split the image into. It then stores the extracted texts and images in an S3 bucket for further analytics and RAG workflow purposes. 
