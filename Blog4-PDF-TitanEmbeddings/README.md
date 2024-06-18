@@ -16,7 +16,7 @@ content_info:
 
 ```
 
-2. **Evaluation Dataset [Optional] **: Users have an option to use an `eval dataset` that with a question bank containing questions and ground truth answers on content from the PDF files provided. To use your own evaluation dataset, mention the name of your evaluation file in `eval_dataset_name` in the `eval_qna_dataset_info` section in the config file. Place this evaluation dataset in the [`eval_data directory`](eval_data/). Supported file formats are `csv`/`xls`/`xlsx` files. Change the `question_key` with the name of the column in your dataset that contains the questions, and the `target_response_key` to the name of the column that contains ground truth to the questions.
+2. **Evaluation Dataset [Optional]**: Users have an option to use an `eval dataset` that with a question bank containing questions and ground truth answers on content from the PDF files provided. To use your own evaluation dataset, mention the name of your evaluation file in `eval_dataset_name` in the `eval_qna_dataset_info` section in the config file. Place this evaluation dataset in the [`eval_data directory`](eval_data/). Supported file formats are `csv`/`xls`/`xlsx` files. Change the `question_key` with the name of the column in your dataset that contains the questions, and the `target_response_key` to the name of the column that contains ground truth to the questions.
 
 ```{.yaml}
 eval_qna_dataset_info:
