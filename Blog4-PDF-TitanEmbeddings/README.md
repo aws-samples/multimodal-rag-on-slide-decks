@@ -48,7 +48,7 @@ After the stack is created successfully, navigate to the stack’s
 `MultimodalCollectionEndpoint` and `OpenSearchPipelineEndpoint`, we will
 use it in the subsequent steps.
 
-***Note: Since this code is work in progress and has not been merged to main, switch to the _8-pipeline-for-pdf-file-support_ to use the latest version of the code. Navigate to the _Blog4-PDF-TitanEmbeddings_ folder.***
+***Note: Since this code is work in progress and has not been merged to main, switch to the _8-pipeline-for-pdf-file-support_ branch to use the latest version of the code. Navigate to the _Blog4-PDF-TitanEmbeddings_ folder.***
 
 ### Data Preparation - Ingest and store PDFs using text and image files
 
