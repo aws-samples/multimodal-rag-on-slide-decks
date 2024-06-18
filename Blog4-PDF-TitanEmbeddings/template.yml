@@ -26,7 +26,7 @@ Metadata:
 
 Parameters:
   OSCollectionName:
-    Default: "multimodal-blog2"
+    Default: "multimodal-enhanced-poc"
     Type: String
     Description: "Name of the Amazon OpenSearch Service Serverless (AOSS) collection"
     MinLength: 1
@@ -42,11 +42,11 @@ Parameters:
     Type: String
     Description: "Name of the vector index in the Amazon OpenSearch Service Serverless (AOSS) collection for text embeddings"
   BucketName:
-    Default: "multimodal-blog2-bucket"
+    Default: "multimodal-rag-poc-bucket"
     Type: String
     Description: "S3 Bucket name"
   NetworkPolicyName:
-    Default: "multimodal-blog2-network-policy"
+    Default: "multimodal-blog4-network-policy"
     Type: String
     Description: "Network policy name for OSI"
 
@@ -54,7 +54,7 @@ Resources:
   OSPolicy:
     Type: "AWS::IAM::RolePolicy"
     Properties:
-      PolicyName: "ospolicy-blog2"
+      PolicyName: "ospolicy-blog4"
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -69,7 +69,7 @@ Resources:
   S3Policy:
     Type: "AWS::IAM::RolePolicy"
     Properties:
-      PolicyName: "s3policy-blog2"
+      PolicyName: "s3policy-blog4"
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -83,7 +83,7 @@ Resources:
   SecurityPolicy: 
     Type: "AWS::OpenSearchServerless::SecurityPolicy" 
     Properties: 
-      Name: "multimodal-blog2-security-policy"
+      Name: "multimodal-blog4-security-policy"
       Type: "encryption" 
       Description: "Encryption policy for OS collections"
       Policy: !Sub >-
@@ -102,7 +102,7 @@ Resources:
   DataAccessAdminPolicy:
     Type: "AWS::OpenSearchServerless::AccessPolicy"
     Properties:
-      Name: "multimodal-blog2-adminpolicy"
+      Name: "multimodal-blog4-adminpolicy"
       Type: "data"
       Policy: !Sub >-
                 [{"Description": "Data Admin access", "Rules": [{"ResourceType": "index", "Resource": ["index/*/*"], "Permission": ["aoss:*"]},
@@ -112,7 +112,7 @@ Resources:
   DataAccessPolicy:
     Type: "AWS::OpenSearchServerless::AccessPolicy"
     Properties:
-      Name: "multimodal-blog2-da-policy"
+      Name: "multimodal-blog4-da-policy"
       Type: "data"
       Policy: !Sub >-
           [{"Description": "Data access", "Rules": [{"ResourceType": "index", "Resource": ["index/*/*"], "Permission": ["aoss:*"]}],
@@ -304,7 +304,7 @@ Resources:
     Type: "AWS::Lambda::Function"
     Properties:
       Handler: index.lambda_handler
-      FunctionName: "multimodal_blog2_deletes3_contents"
+      FunctionName: "multimodal_blog4_deletes3_contents"
       Description: "Delete all objects in S3 bucket"
       Timeout: 30
       Role: !GetAtt 'LambdaBasicExecutionRole.Arn'
