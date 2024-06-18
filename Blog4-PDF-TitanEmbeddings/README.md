@@ -55,9 +55,9 @@ aws:
 
 ### Data Preparation - Ingest and store PDFs using text and image files
 
-1. The [1_data_prep_pdf_files.ipynb](notebooks/1_data_prep_pdf_files.ipynb) notebook handles data preparation for _PDF files_. It utilizes the PDF files mentioned in the config file, extracts text from each page of the PDF file using the `PyPDF2` library and stores each in a `.txt` file. It converts each page in the PDF file into an image and plans to crop it in 4 parts: _2 horizontal_ and _2 vertical_ halves and store it as `.jpg` files based on how many parts a user wants to split the image into. It then stores the extracted texts and images in an S3 bucket for further analytics and RAG workflow purposes. 
+1. The [1_data_prep_pdf_files.ipynb](notebooks/1_data_prep_pdf_files.ipynb) notebook handles data preparation for _PDF files_. It utilizes the PDF files mentioned in the config file, extracts text from each page of the PDF file using the `PyPDF2` library and stores each in a `.txt` file. It converts each page in the PDF file into an image and plans to crop it in 4 parts: _2 horizontal_ and _2 vertical_ halves and store it as `.jpg` files based on how many parts a user wants to split the image into. It then stores the extracted texts and images in an S3 bucket for further analytics and RAG workflow purposes. This notebook saves the entire page as a single image by default.
 
-The user has the flexibility to choose from the following options to crop the image (or the `pdf page` as an image) as provided in the `page_split_imgs` section of the config file:
+The user has the flexibility to choose from the following options to crop the image (or the `pdf page` as an image) as provided in the `page_split_imgs` section of the [config_full.yaml](notebooks/configs/config_full.yaml) file:
 
 1. If you want to crop the `pdf image` vertically into two halves: a left half and a right half, set the `vertical_split` to yes.
 1. If you want to crop the `pdf image` horizontally into two halves: an upper half and a lower half, set the `horizontal_split` to yes.
@@ -97,8 +97,7 @@ After extracting all of the texts and images from PDF files in separate text and
 An example of a prompt that is used to get entities from an Image using _Claude 3 Sonnet_:
 
 ```
-entity_extraction_prompt: str = """
-Please provide a detailed description of the entities present in the image. Entities, are specific pieces of information or objects within a text that carry particular significance. These can be real-world entities like names of people, places, organizations, or dates. Refer to the types of entities: Named entities: These include names of people, organizations, locations, and dates. You can have specific identifiers within this, such as person names or person occupations.
+Human: Please provide a detailed description of the entities present in the image. Entities, are specific pieces of information or objects within a text that carry particular significance. These can be real-world entities like names of people, places, organizations, or dates. Refer to the types of entities: Named entities: These include names of people, organizations, locations, and dates. You can have specific identifiers within this, such as person names or person occupations.
 
 Custom entities: These are entities specific to a particular application or domain, such as product names, medical terms, or technical jargon.
 
@@ -109,7 +108,8 @@ Product entities: Names of products might be grouped together into product entit
 Data entities: Names of the data and metrics present. This includes names of metrics in charts, graphs and tables, and throughout the image.
 
 Now based on the image, create a list of these entities. Your response should be accurate. Do not make up an answer.
-"""
+
+Assistant:
 ```
 
 ***Entities from text files are extracted using [`NLTK`]***
@@ -144,7 +144,7 @@ Now based on the image, create a list of these entities. Your response should be
 
 1. After the LLM as a judge evaluation is complete, another final LLM is used (Claude 3 Sonnet) to go over the explanations and selections from the judge to provide an analysis and overall recommendation as to why a particular response source (index option) was chosen over the others.
 
-1. This notebook uses _Claude 3 Sonnet_ as the LLM that acts as a judge. The prompt template for this LLM as a judge is in the [prompt_templates/eval_template.txt](notebooks/prompt_templates/eval_template.txt) directory as follows:
+1. This notebook uses _Claude 3 Sonnet_ as the LLM that acts as a judge. The prompt template for this LLM as a judge is in the [prompt_templates/eval_template.txt](notebooks/prompt_templates/claude_eval_template.txt) directory as follows:
 
 ```
 Human: Your job is to find the best match answer to a question in the <question></question> tags based on the response candidates in the <candidate_responses></candidate_responses> fields. From the response candidates given below, find which the one that matches the target response in the <target_response></target_response> tags the best in terms of correctness, and explanation to the user question.
@@ -172,7 +172,7 @@ Assistant: Here is the response in json:
 
 The example consists of 4 Jupyter notebooks and a couple of Python scripts:
 
-- [1_data_prep_pdf_files.ipynb](notebooks/1_data_prep_pdf_files.ipynb) - This notebook contains the data preparation code. Prepares the images and texts from PDF files and sends it to S3.
+- [1_data_prep_pdf_files.ipynb](notebooks/1_data_prep_files.ipynb) - This notebook contains the data preparation code. Prepares the images and texts from files and sends it to S3.
 
 - [2_data_ingestion.ipynb](notebooks/2_data_ingestion.ipynb) - This notebook contains code to ingest the embeddings of images and text files into two OpenSearch serverless text and image indexes. 
 
@@ -186,9 +186,23 @@ The example consists of 4 Jupyter notebooks and a couple of Python scripts:
 
 - [config.yaml](notebooks/config.yml) - contains configuration parameters such as directory path, model information etc. for this solution.
 
+
+## Prompt Templates
+
+This repository uses the following prompt templates in the search process:
+
+- [image_description_prompt.txt](notebooks/prompt_templates/image_description_prompt.txt) - This prompt is used to describe the images that are retrieved from S3. The image descriptions are generated, converted to embeddings and sent to OpenSearch serverless.
+- [extract_image_entities_prompt_template.txt](notebooks/prompt_templates/extract_image_entities_prompt_template.txt) - This prompt is used to extract entities from a user question. These entities can be product names, people names, or anything that highlights the importance of your domain specific data. These entities are attached as metadata to the index body and sent to opensearch serverless. The purpose of these entities is that it acts as a prefilter during the process of hybrid search to only get the relevant documents.
+- [extract_question_entities_prompt.txt](notebooks/prompt_templates/extract_question_entities_prompt.txt) - This prompt is used to extract metadata/entities from the user question. The metadata from the user question is used to match and get the similar documents in the image and text indices containing similar metadata/entities.
+- [retrieve_answer_from_images_prompt.txt](notebooks/prompt_templates/retrieve_answer_from_images_prompt.txt) - This prompt is used to search for the answer to the user question during inference. The prompt asks to search for the answer in the image description. If the answer is not found in the image description, the answer is looked for directly in the image using the image path. If the answer is not provided from either of the search options, the model responds with a "not found" and moves to the next relevant image in the search process.
+- [retrieve_answer_from_texts_prompt.txt](notebooks/prompt_templates/retrieve_answer_from_texts_prompt.txt) - This prompt is used to search for the answer to the user question in the text extracted from files. If the answer is not found in the text, then the model responds with a "not found" and moves to the next relevant text document in the search process.
+- [final_combined_response_prompt_template.txt](notebooks/prompt_templates/final_combined_response_prompt_template.txt) - This prompt is used to gather all valid responses during the search process (from the image and the text index) and give a final response to the user question.
+- [claude_eval_template.txt](notebooks/prompt_templates/claude_eval_template.txt) - This prompt is used by an LLM that acts as a judge, iterates through the responses from each index and provides information and evaluation on which index gives the best response for a specific dataset. This prompt template is for Claude. This can be changed/adapted to a model of your choice with a new template.
+- [claude_final_summary_analysis_prompt.txt](notebooks/prompt_templates/claude_final_summary_analysis_prompt.txt) - This prompt is used by an LLM to go over all of the subjective evaluations done by the LLM that acts as a judge, and provide trends and patterns as to which index strategy to choose based on the results from the dataset. This prompt template is for Claude. This can be changed/adapted to a model of your choice with a new template.
+
 ### Dataset
 
-The dataset used in this repo is a publicly available AWS Whitepaper which is used in 1_data_prep_pdf_files.ipynb as a `request.get`. You can use your own public urls or place your custom PDF files manually in the `PDF_data` directory. Mention the urls and PDF files you wish to run through in the config.yaml file under the `content_info` section.
+The dataset used in this repo is a publicly available AWS Whitepaper which is used in 1_data_prep_files.ipynb as a `request.get`. You can use your own public urls or place your custom PDF files manually in the `PDF_data` directory. Mention the urls and PDF files you wish to run through in the config.yaml file under the `content_info` section.
 
 ## Setup
 
