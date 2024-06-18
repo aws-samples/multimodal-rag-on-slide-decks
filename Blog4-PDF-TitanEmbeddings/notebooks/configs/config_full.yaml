@@ -2,7 +2,7 @@
 aws:
   # adding the cfn stack name in the config.yml file in case users
   # deploy the template using their custom name
-  cfn_stack_name: multimodal-enhanced-poc
+  cfn_stack_name: multimodal-blog4-stack
   os_service: aoss
 
 # directory paths

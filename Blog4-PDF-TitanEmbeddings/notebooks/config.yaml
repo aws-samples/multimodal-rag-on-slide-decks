@@ -1,8 +1,4 @@
 ---
-aws:
-  # add the name of your cft
-  cfn_stack_name: <name-of-your-cloudformation-template>
-  
 # content information: pdf files and slide decks
 content_info:
   # either list the names of the pdf files you manually upload or the 
