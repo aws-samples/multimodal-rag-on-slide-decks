@@ -43,10 +43,6 @@ The following steps describe how this solution works. View the architecture diag
 | us-east-1  | [<img src="./images/ML-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=multimodal-blog2-stack&templateURL=https://aws-blogs-artifacts-public.s3.amazonaws.com/artifacts/ML-16123-4/template.yml) |
 | us-west-2  | [<img src="./images/ML-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=multimodal-blog2-stack&templateURL=https://aws-blogs-artifacts-public.s3.amazonaws.com/artifacts/ML-16123-4/template.yml) |
 
-After the stack is created successfully, navigate to the stack’s
-`Outputs` tab on the AWS CloudFormation console and note the values for
-`MultimodalCollectionEndpoint` and `OpenSearchPipelineEndpoint`, we will
-use it in the subsequent steps.
 
 ![](images/ML-16123-2-cloudformation-outputs.png)
 
