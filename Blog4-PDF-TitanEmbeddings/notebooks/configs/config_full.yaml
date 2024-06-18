@@ -2,7 +2,7 @@
 aws:
   # adding the cfn stack name in the config.yml file in case users
   # deploy the template using their custom name
-  cfn_stack_name: multi-modal-revised
+  cfn_stack_name: multimodal-enhanced-poc
   os_service: aoss
 
 # directory paths
@@ -12,13 +12,13 @@ aws:
 dir_info:
   # a public pdf file is used by default in this folder but if you would like to use
   # your own pdf files, put them manually in this local directory
-  source_dir: pdf_data
+  source_dir: data
   metrics_dir_name: metrics
-  pdf_img_path: images
-  pdf_txt_path: text_files
-  pdf_extracted_data: pdf_extracted_data
-  json_img_dir: pdf_img_json_dir
-  json_txt_dir: pdf_text_json_dir
+  img_path: images
+  txt_path: text_files
+  extracted_data: extracted_data
+  json_img_dir: img_json_dir
+  json_txt_dir: text_json_dir
   # save the images manually from the pdf if need be
   manually_saved_images_path: manually_saved_imgs
   # These are the paths to the prompts that are used in the process
@@ -69,19 +69,13 @@ dir_info:
 # response to your evaluation data/save the embeddings, and prepare the 
 # data for multimodal image RAG inference
 run_steps:
-  1_data_prep_pdf_files.ipynb: yes
+  1_data_prep_files.ipynb: yes
   2_data_ingestion.ipynb: yes
   3_rag_inference.ipynb: yes
   4_rag_evaluation.ipynb: yes
   # set this step to 'yes' only when you want to delete the indexes and images/texts from the 
   # s3 bucket to store new data in both from scratch
   5_cleanup.ipynb: no
-
-# bucket information
-bucket_info:
-  bucket_prefix: multimodal
-  bucket_image_prefix: img
-  image_file_extn: .jpg
 
 # this section gives user the control to split the image into parts, or ingest the image as a whole as is
 # there are 4 options to split the image. 
