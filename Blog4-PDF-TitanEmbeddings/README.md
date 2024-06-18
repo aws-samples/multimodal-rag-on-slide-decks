@@ -36,17 +36,20 @@ The following steps describe how this solution works. View the architecture diag
 
 ## Use AWS CloudFormation template to create the solution stack
 
-<i>Deploy the cloudformation template to run this Enhanced MultiModal Solution.</i>
-
-| AWS Region |                                                                                                                                         Link                                                                                                                                          |
-|:----------:|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
-| us-east-1  | [<img src="./images/ML-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=enhanced-multimodal-poc-stack&templateURL=https://multimodal-blog-bucket.s3.amazonaws.com/templates/template.yml) |
-| us-west-2  | [<img src="./images/ML-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=menhanced-multimodal-poc-stack&templateURL=https://multimodal-blog-bucket.s3.amazonaws.com/templates/template.yml) |
+Deploy the cloudformation template to run this Enhanced MultiModal Solution using the link here: [template.yml](template.yml).
 
 After the stack is created successfully, navigate to the stack’s
 `Outputs` tab on the AWS CloudFormation console and note the values for
 `MultimodalCollectionEndpoint` and `OpenSearchPipelineEndpoint`, we will
 use it in the subsequent steps.
+
+After the cloudformation template is deployed, change the `cfn_name` in [config.yaml](notebooks/config.yaml) to the name of your cloudformation stack.
+
+```{.yaml}
+aws:
+  # add the name of your cft
+  cfn_stack_name: <name-of-your-cloudformation-template>
+```
 
 ***Note: Since this code is work in progress and has not been merged to main, switch to the _8-pipeline-for-pdf-file-support_ branch to use the latest version of the code. Navigate to the _Blog4-PDF-TitanEmbeddings_ folder.***
 
