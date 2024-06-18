@@ -10,42 +10,43 @@ Additionally, this repo also shows how to use [LiteLLM](https://github.com/Berri
 
 ``` {.yaml}
 content_info:
-  content_type: pdf 
-  pdf_local_files:
+  local_files:
   - https://docs.aws.amazon.com/pdfs/whitepapers/latest/ml-best-practices-healthcare-life-sciences/ml-best-practices-healthcare-life-sciences.pdf#ml-best-practices-healthcare-life-sciences
   - <your-custom-pdf-file-name>
 
 ```
 
-2. **Evaluation Dataset**: Users have an option to use an `eval dataset` that with a question bank containing questions and ground truth answers on content from the PDF files provided. To use your own evaluation dataset, mention the name of your evaluation file in `eval_dataset_name` in the `eval_qna_dataset_info` section in the config file. Place this evaluation dataset in the [`eval_data directory`](eval_data/). Supported file formats are `csv`/`xls`/`xlsx` files. Change the `question_key` with the name of the column in your dataset that contains the questions, and the `target_response_key` to the name of the column that contains ground truth to the questions.
+2. **Evaluation Dataset [Optional] **: Users have an option to use an `eval dataset` that with a question bank containing questions and ground truth answers on content from the PDF files provided. To use your own evaluation dataset, mention the name of your evaluation file in `eval_dataset_name` in the `eval_qna_dataset_info` section in the config file. Place this evaluation dataset in the [`eval_data directory`](eval_data/). Supported file formats are `csv`/`xls`/`xlsx` files. Change the `question_key` with the name of the column in your dataset that contains the questions, and the `target_response_key` to the name of the column that contains ground truth to the questions.
 
 ```{.yaml}
 eval_qna_dataset_info:
   dir_name: eval_data
   eval_dataset_name: <name-of-your-evaluation-dataset.csv/xlsx/xls>
-  # set 'is_given' to no if the eval dataset is not given
-  is_given: Yes
   question_key: Query
   target_response_key: Response
 ```
 
-3. **Bring your own images** If you are bringing in your own images that you want to upload in addition to the PDF files, place those images in a directory, specify the name of that directory in the `manually_saved_images_path` in the `pdf_dir_info` section. Set the `manually_saved_images_provided` to `yes`. This will include the images you bring in manually to this POC.
-
-``` {.yaml}
-pdf_dir_info:
-  # save the images manually from the pdf if need be
-  manually_saved_images_path: manually_saved_imgs
-  # if you want to use the manually uploaded images 
-  # (that you extract from the document, for example, screenshots), 
-  # set "manually_saved_images_provided" to yes 
-  manually_saved_images_provided: no
-```
+***To view all of the configuration file parameters, and tweak other parameters, view the parent config file here: [config_full.yaml](notebooks/configs/config.yaml).***
 
 ## Workflow
 
 The following steps describe how this solution works. View the architecture diagram for this solution below:
 
 ![](images/architecture_diagram.jpg)
+
+## Use AWS CloudFormation template to create the solution stack
+
+<i>Deploy the cloudformation template to run this Enhanced MultiModal Solution.</i>
+
+| AWS Region |                                                                                                                                         Link                                                                                                                                          |
+|:----------:|:-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| us-east-1  | [<img src="./images/ML-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=enhanced-multimodal-poc-stack&templateURL=https://multimodal-blog-bucket.s3.amazonaws.com/templates/template.yml) |
+| us-west-2  | [<img src="./images/ML-cloudformation-launch-stack.png">](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=menhanced-multimodal-poc-stack&templateURL=https://multimodal-blog-bucket.s3.amazonaws.com/templates/template.yml) |
+
+After the stack is created successfully, navigate to the stack’s
+`Outputs` tab on the AWS CloudFormation console and note the values for
+`MultimodalCollectionEndpoint` and `OpenSearchPipelineEndpoint`, we will
+use it in the subsequent steps.
 
 ### Data Preparation - Ingest and store PDFs using text and image files
 

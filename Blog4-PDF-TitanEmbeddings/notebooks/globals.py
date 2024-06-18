@@ -4,12 +4,17 @@ Global variables used throughout the code.
 import os
 import boto3
 import sagemaker
+from typing import List
 
 BUCKET_PREFIX: str = "multimodal"
 BUCKET_EMB_PREFIX: str = f"{BUCKET_PREFIX}/osi-embeddings-json"
 BUCKET_IMG_PREFIX: str = f"{BUCKET_PREFIX}/img"
-BUCKET_PDF_IMG_PREFIX: str = f"{BUCKET_PREFIX}/pdf_img"
-BUCKET_PDF_TEXT_PREFIX: str = f"{BUCKET_PREFIX}/pdf_text"
+BUCKET_TEXT_PREFIX: str = f"{BUCKET_PREFIX}/text"
+
+# Path to the config files
+CONFIG_FOLDER: str = "configs"
+CONFIG_SUBSET_FILE: str = "config.yaml"
+FULL_CONFIG_FILE = f"{CONFIG_FOLDER}/config_full.yaml"
 
 S3_MODEL_CODE_PREFIX: str = "code"
 S3_MODEL_PREFIX: str = "model"
@@ -25,30 +30,16 @@ OS_SERVICE: str = "aoss"
 
 # local files and folder structure
 IMAGE_DIR: str = "img"
-PDF_IMAGE_DIR: str = f"{BUCKET_PREFIX}/pdf_img"
-PDF_TEXT_DIR: str = f"{BUCKET_PREFIX}/pdf_txt"
+LOCAL_IMAGE_DIR: str = f"{BUCKET_PREFIX}/local_imgs"
+LOCAL_TEXT_DIR: str = f"{BUCKET_PREFIX}/local_txts"
+TEXT_DIR: str = "text"
 IMAGE_FILE_EXTN: str = ".jpg"
 TEXT_FILE_EXTN: str = ".txt"
 B64_ENCODED_IMAGES_DIR: str = os.path.join(IMAGE_DIR, "b64_images")
 
-# json files
-JSON_TEXT_DIR: str = "pdf_text_json_dir"
+# Qualitative metrics on the following list
+QUALITATIVE_METRICS_LIST: List[str] = ['combined_response', 'text_response', 'img_response']
 
-# CFN_STACK_NAME: str = "multimodal-blog2-stack"
-
-# prompt to generate questions based on the text/image content provided
-QUESTION_GEN_PROMPT: str = """
-Human: Based on the text description provided in <text_desc></text_desc> tags, generate a list of five to 10 questions. Only refer to the 
-context in the <text_desc> tags, and do not provide questions that are not related to the context provided. 
-
-Your response should be in a JSON format containing two elements: "question" and "answer". The question should be directly related to the 
-context provided in the <text_desc> tags and the answer should be the answer to that question from the <text_desc> context. Do not make up an answer.
-
-If you do not know the answer to the question just say that you don't know the answer. Don't try to make up an answer or a question. Refer to the context below:
-
-<text_desc>
-{context}
-</text_desc>
-
-Assistant: Sure, here are a list of Questions and Answers generated from the context in JSON format:
-"""
+# other global values
+IMAGE_FORMAT: str = "JPEG"
+BEDROCK_EP_URL: str = "https://bedrock-runtime.{region}.amazonaws.com"

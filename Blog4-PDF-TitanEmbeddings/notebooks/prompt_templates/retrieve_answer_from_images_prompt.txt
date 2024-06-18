@@ -30,6 +30,6 @@ If you cannot find an answer, search for it carefully in the image and for quest
 7. Double check if the answer is in the image if you cannot find it in the first try.
 </instructions>
 
-If the image does not contain the answer, do not respond with "after carefully examining the image, i could not find a direct answer to the question..." or anything similar. In this case, your response should always be "not found" and nothing else.
+If the image does not contain the answer, or if image does not directly answers the user question, do not respond with "after carefully examining the image, i could not find a direct answer to the question..." or anything similar. In this case, your response should always be "not found" and nothing else.
 
 Assistant: Here is my response to the question. I will give a direct answer to the question if I find it and if not, will say "not found":

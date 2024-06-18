@@ -18,14 +18,35 @@ logger = logging.getLogger(__name__)
 
 s3 = boto3.client('s3')
 
-# global constants
-CONFIG_FILE_PATH = "config.yaml"
-# read the config yaml file
-fpath = CONFIG_FILE_PATH
-with open(fpath, 'r') as yaml_in:
-    config = yaml.safe_load(yaml_in)
-logger.info(f"config read from {fpath} -> {json.dumps(config, indent=2)}")
+def _merge_dicts(src, dest):
+    for key, value in src.items():
+        # check for if the key in the user config file is in the parent config file
+        if isinstance(value, dict) and key in dest:
+            # if there, then call the function again and if not, add the value to the user config
+            # file and merge both to return the full config file
+            _merge_dicts(value, dest[key])
+        else:
+            dest[key] = value
+                
+def load_and_merge_configs(config_path: str, full_config_path: str):
+    """
+    Load the user config and merge it with the full config.
+    
+    :param config_path: Path to the user config file.
+    :param full_config_path: Path to the full config file.
+    :return: Merged configuration dictionary.
+    """
+    with open(full_config_path, 'r') as f:
+        full_config = yaml.safe_load(f)
+    
+    with open(config_path, 'r') as f:
+        user_config = yaml.safe_load(f)
 
+    _merge_dicts(user_config, full_config)
+    return full_config
+
+# initialize the full config file
+config = load_and_merge_configs(g.CONFIG_SUBSET_FILE, g.FULL_CONFIG_FILE)
 
 def upload_to_s3(local_file_path:str, bucket_name: str, bucket_prefix:str) -> None:
     global s3
@@ -91,7 +112,9 @@ def get_llm_response(question: str,
     This function takes in the prompt that checks whether the text file has a response to the question and if not, 
     returns "not found" to move to the next hit.
     """
-    final_llm_prompt: str = Path(config['search_response_prompt_templates']['final_combined_llm_response_prompt']).read_text()
+    get_final_llm_response_prompt_fpath: str = os.path.join(config['dir_info']['prompt_dir'],
+                                                                     config['dir_info']['final_combined_llm_response_prompt'])
+    final_llm_prompt: str = Path(get_final_llm_response_prompt_fpath).read_text()
     prompt = final_llm_prompt.format(question=question, summary=summary)
     messages = [
         {
@@ -101,6 +124,8 @@ def get_llm_response(question: str,
             ],
         }
     ]
+    temperature = config['inference_parameters'].get('temperature', 0.1)
+    max_tokens = config['inference_parameters'].get('max_tokens', 500)
     # suppress the litellm logger responses
     lite_llm_logger = logging.getLogger('LiteLLM')
     lite_llm_logger.setLevel(logging.CRITICAL)
@@ -119,6 +144,8 @@ def get_llm_response(question: str,
         response = completion(
             model=modelId,
             messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens
         )
         # Suppress logging output
         logging.getLogger('LiteLLM').setLevel(logging.CRITICAL)
@@ -143,7 +170,9 @@ def get_llm_response(question: str,
 def get_question_entities(bedrock: botocore.client, 
                    question:str, 
                    modelId: str = g.CLAUDE_MODEL_ID) -> str:
-    question_entities_extraction_prompt: str = Path(config['search_response_prompt_templates']['extract_question_entities_prompt']).read_text()
+    get_entities_from_user_question_prompt_fpath: str = os.path.join(config['dir_info']['prompt_dir'],
+                                                                     config['dir_info']['extract_entities_from_user_question'])
+    question_entities_extraction_prompt: str = Path(get_entities_from_user_question_prompt_fpath).read_text()
     prompt = question_entities_extraction_prompt.format(question=question)
 
     body = json.dumps(
