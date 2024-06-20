@@ -1,0 +1,159 @@
+---
+aws:
+  # adding the cfn stack name in the config.yml file in case users
+  # deploy the template using their custom name
+  cfn_stack_name: multimodal-blog4-stack
+  os_service: aoss
+
+# directory paths
+# these directory paths contain the source data PDF files that are consumed, 
+# the text and image descriptions that are stored as embeddings in the opensearch
+# text and image indexes
+dir_info:
+  # a public pdf file is used by default in this folder but if you would like to use
+  # your own pdf files, put them manually in this local directory
+  source_dir: data
+  metrics_dir_name: metrics
+  img_path: images
+  txt_path: text_files
+  extracted_data: extracted_data
+  json_img_dir: img_json_dir
+  json_txt_dir: text_json_dir
+  # save the images manually from the pdf if need be
+  manually_saved_images_path: manually_saved_imgs
+  # These are the paths to the prompts that are used in the process
+  # of generating responses from the image and the text indices in the
+  # run inference step. Additional, this contains an evaluation prompt that 
+  # is used by the LLM as a judge while making subjective evaluations of 
+  # which index strategy generates the most optimal and accurate responses to the user
+  # questions based on correctness and relevancy
+  prompt_dir: prompt_templates
+  ## this prompt is used to get descriptions from each image from the pdf files
+  image_description_prompt: image_description_prompt.txt
+  # this prompt template is used to search for responses in the image description as well as
+  # in the image directly during the RAG inference pipeline
+  search_in_images_template: retrieve_answer_from_images_prompt.txt
+  # this prompt template is used to retrieve answers from the texts that are extracted from the 
+  # PDF pages
+  search_in_text_template: retrieve_answer_from_texts_prompt.txt
+  # this prompt template is used to extract entities/metadata from the user question in the 
+  # process of prefiltering to get only the matching documents from the index with similar metadata
+  extract_entities_from_user_question: extract_question_entities_prompt.txt
+  # this prompt template is used by a final LLM call to give a combined response from both the 
+  # indices
+  final_combined_llm_response_prompt: final_combined_response_prompt_template.txt
+  # this prompt template is used by claude to give a final summary analysis on which index strategy to use
+  # for this given dataset
+  final_llm_as_a_judge_summary_analysis: claude_final_summary_analysis_prompt.txt
+  # This prompt is used by Claude 3 Sonnet to generate entities from the images that are 
+  # extracted from the pdf files. Change this to match your domain tailored data so that
+  # during the retrieval process, the prefilter happens effectively and matches metadata
+  # from the user question to the domain tailored metadata of your documents
+  extract_image_entities_template: extract_image_entities_prompt_template.txt
+  # llm as a judge prompt template
+  eval_prompt_template: claude_eval_template.txt
+  # files containing the metrics from the inference and evaluation steps
+  processed_prompts_for_eval: processed_llm_judge_evaluation_prompts.csv
+  judge_model_eval_completions: model_eval_completions
+  llm_as_a_judge_completions: llm_as_a_judge_completions.csv
+  index_response_distribution: llm_strategy_pick_rate.csv
+  # save the txt files with the final llm analysis
+  all_explanations: all_explanations.txt
+  final_summary_analysis: final_summary_analysis.txt
+  # p95 metrics - for token counts and latency metrics during evaluation
+  p95_metrics_file: p95_summary_metrics.txt
+  # contains the quantitative metrics from evaluation of inference responses
+  eval_score_dataset: quantitative_eval_metrics.csv
+
+# Set the steps you want to run all via a python script to get the 
+# response to your evaluation data/save the embeddings, and prepare the 
+# data for multimodal image RAG inference
+run_steps:
+  1_data_prep_files.ipynb: yes
+  2_data_ingestion.ipynb: yes
+  3_rag_inference.ipynb: yes
+  4_rag_evaluation.ipynb: yes
+  # set this step to 'yes' only when you want to delete the indexes and images/texts from the 
+  # s3 bucket to store new data in both from scratch
+  5_cleanup.ipynb: no
+
+# this section gives user the control to split the image into parts, or ingest the image as a whole as is
+# there are 4 options to split the image. 
+# 1. if you do not want to split the image, set all of the three below to "no" - manually_saved_images_provided, horizontal_split and vertical_split
+# 2. if you want to split the image horizontally, only set the "horizontal_split" to yes and the rest to no
+# 3. if you want to split the image vertically, only set the "vertical_split" to yes and the rest to no
+# 4. if you want to split the image 4 ways, set "horizontal_split" and "vertical_split" to yes
+page_split_imgs: 
+  # all of the options below are set to 'no', so the entire pdf page will be
+  # saved as an image without any cropping
+  horizontal_split: no
+  vertical_split: no
+  # set the image resolution
+  image_scale: 3
+
+# content information: pdf files and slide decks
+content_info:
+  # either list the names of the pdf files you manually upload or the 
+  # list of public pdf urls
+  local_files:
+  # this pdf file is fetched from the publicly available on the aws whitepaper's website: 
+  # https://aws.amazon.com/whitepapers/?whitepapers-main.sort-by=item.additionalFields.sortDate&whitepapers-main.sort-order=desc&awsf.whitepapers-content-type=*all&awsf.whitepapers-global-methodology=*all&awsf.whitepapers-tech-category=*all&awsf.whitepapers-industries=*all&awsf.whitepapers-business-category=*all&whitepapers-main.q=AI&whitepapers-main.q_operator=AND
+  - https://docs.aws.amazon.com/pdfs/whitepapers/latest/ml-best-practices-healthcare-life-sciences/ml-best-practices-healthcare-life-sciences.pdf#ml-best-practices-healthcare-life-sciences
+  # - <list your manually uploaded pdf file names in pdf_data directory>
+
+inference_info:
+  # represents the number of parallel requests sent to the model endpoint asynchronously
+  parallel_inference_count: 10
+  # represents the entities to be matched between the user query and the image and text data in OpenSearch serverless for Hybrid Search
+  minimum_entities_to_match_from_question: 2
+
+# contains model list information on the model that is used to run inferences
+# during the inference step against the user provided questions. This dictionary
+# also contains model information on the LLM as a judge that is used to run
+# subjective evaluations against the responses from each index 
+model_info:
+  inference_model_info:
+    model_id: anthropic.claude-3-sonnet-20240229-v1:0
+    # this is the total input and output prices per 1k tokens that can be found on the 
+    # public pricing page here: https://aws.amazon.com/bedrock/pricing/?refid=0eaabb80-ee46-4e73-94ae-368ffb759b62
+    input_token_price: 0.00300
+    output_token_price: 0.01500
+  # This is for the llm that acts as a judge to subjectively evaluate the responses from the 
+  # run inference step
+  eval_model_info:
+    model_id: anthropic.claude-3-sonnet-20240229-v1:0
+    input_tokens_price: 0.00300
+    output_tokens_price: 0.01500
+  # this is the model that is used to create embeddings from user questions and image/text data
+  embeddings_model_info:
+    model_id: amazon.titan-embed-text-v1
+    max_text_len_for_embedding: 500
+    rouge_metric_selection: 'rougeL' # can be rouge-1, rouge-2, rouge-w, rouge-s, etc
+  # this LLM is used to gather all of the evaluations and explanations from 
+  # the LLM as a judge and provide a summary analysis of which strategy to use
+  # for the multimodal use case (image only responses/text only responses/or responses
+  # from both of the indexes combined)
+  final_analysis_llm_summarizer:
+    model_id: anthropic.claude-3-sonnet-20240229-v1:0
+
+# these are the inference parameters used by the bedrock model while generating 
+# inferences during the process of the RAG workflow and getting evaluations from the LLM that acts as a judge
+inference_parameters: 
+  temperature: 0.1
+  max_tokens: 500
+  
+other_inference_and_eval_metrics:
+  rouge_metric_selection: 'rougeL' # can be rouge-1, rouge-2, rouge-w, rouge-s, etc
+  # This is the 'k' parameter. Increase or decrease it for your use case
+  k_count_retrieval: 4
+
+# enter the file - enter information in here if you are bringing in a curated dataset of questions to test against
+eval_qna_dataset_info:
+  dir_name: eval_data
+  # enter the file name of your evaluation dataset. This can be a .csv or a .xls/.xlsx file
+  eval_dataset_name: dummy_data_file.csv
+  # this is the key/column name in the df that represents
+  # the user question/query
+  question_key: Query
+  target_response_key: Response
+  updated_eval_file: updated_eval_dataset.csv

@@ -1,0 +1,3 @@
+Human: Please provide a detailed description of the image. Describe the overall layout and design of the image. Identify and describe any tables, charts, or other visual elements present, including the specific data or information contained within them. Provide as much detail as possible about the content and format of the image. Your response should be extremely detailed and data oriented. Give the description for all four portions of the image, the upper right, upper left, lower right and lower left and include all key points data in each if possible. Be completely accurate.
+
+Assistant: 

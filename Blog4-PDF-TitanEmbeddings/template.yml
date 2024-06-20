@@ -1,0 +1,367 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "This CloudFormation template creates resources required for 'talk-to-your-slide-deck' using Titan text embeddings"
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label: 
+          default: Required Parameters
+        Parameters:
+          - OSCollectionName          
+          - OSTextIndexName
+          - OSImgIndexName
+          - BucketName
+          - NetworkPolicyName
+    ParameterLabels:      
+      OSCollectionName:
+        default: OpenSearch collection name
+      OSTextIndexName:
+        default: OpenSearch vector index name for text
+      OSImgIndexName:
+        default: OpenSearch vector index name for images
+      BucketName:
+        default: Bucket used to store data
+      NetworkPolicyName:
+        default: Network policy name for OSI
+
+Parameters:
+  OSCollectionName:
+    Default: "multimodal-enhanced-poc"
+    Type: String
+    Description: "Name of the Amazon OpenSearch Service Serverless (AOSS) collection"
+    MinLength: 1
+    MaxLength: 63
+    AllowedPattern: ^[a-z0-9](-*[a-z0-9])*
+    ConstraintDescription: "Must be lowercase or numbers with a length of 1-63 characters"
+  OSImgIndexName:
+    Default: "images"
+    Type: String
+    Description: "Name of the vector index in the Amazon OpenSearch Service Serverless (AOSS) collection for image embeddings"
+  OSTextIndexName:
+    Default: "texts"
+    Type: String
+    Description: "Name of the vector index in the Amazon OpenSearch Service Serverless (AOSS) collection for text embeddings"
+  BucketName:
+    Default: "multimodal-rag-poc-bucket"
+    Type: String
+    Description: "S3 Bucket name"
+  NetworkPolicyName:
+    Default: "multimodal-blog4-network-policy"
+    Type: String
+    Description: "Network policy name for OSI"
+
+Resources:
+  OSPolicy:
+    Type: "AWS::IAM::RolePolicy"
+    Properties:
+      PolicyName: "ospolicy-blog4"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Action:
+              - "aoss:APIAccessAll"
+              - "aoss:DashboardsAccessAll"
+              - "aoss:BatchGetCollection"
+            Resource: "*"
+      RoleName: !Ref OSPipelineExecutionRole
+
+  S3Policy:
+    Type: "AWS::IAM::RolePolicy"
+    Properties:
+      PolicyName: "s3policy-blog4"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+        - Sid: "ReadFromS3"
+          Effect: "Allow"
+          Action: "s3:GetObject"
+          Resource:
+          - !Join [ "", ["arn:aws:s3:::", !Ref BucketName, "*" ] ]
+      RoleName: !Ref OSPipelineExecutionRole
+
+  SecurityPolicy: 
+    Type: "AWS::OpenSearchServerless::SecurityPolicy" 
+    Properties: 
+      Name: "multimodal-blog4-security-policy"
+      Type: "encryption" 
+      Description: "Encryption policy for OS collections"
+      Policy: !Sub >-
+                {"Rules":[{"ResourceType":"collection","Resource":["collection/${OSCollectionName}"]}],"AWSOwnedKey":true}
+
+  NetworkPolicy: 
+    Type: "AWS::OpenSearchServerless::SecurityPolicy" 
+    Properties: 
+      Name: !Ref NetworkPolicyName
+      Type: "network" 
+      Description: "Network policy for OS collections"
+      Policy: !Sub >-
+                [{"Rules":[{"ResourceType":"collection","Resource":["collection/${OSCollectionName}"]},
+                {"ResourceType":"dashboard","Resource":["collection/${OSCollectionName}"]}],"AllowFromPublic":true}]
+  
+  DataAccessAdminPolicy:
+    Type: "AWS::OpenSearchServerless::AccessPolicy"
+    Properties:
+      Name: "multimodal-blog4-adminpolicy"
+      Type: "data"
+      Policy: !Sub >-
+                [{"Description": "Data Admin access", "Rules": [{"ResourceType": "index", "Resource": ["index/*/*"], "Permission": ["aoss:*"]},
+                {"ResourceType": "collection", "Resource": ["collection/${OSCollectionName}"], "Permission": ["aoss:*"]}],
+                "Principal": ["arn:aws:iam::${AWS::AccountId}:role/Admin"]}]
+
+  DataAccessPolicy:
+    Type: "AWS::OpenSearchServerless::AccessPolicy"
+    Properties:
+      Name: "multimodal-blog4-da-policy"
+      Type: "data"
+      Policy: !Sub >-
+          [{"Description": "Data access", "Rules": [{"ResourceType": "index", "Resource": ["index/*/*"], "Permission": ["aoss:*"]}],
+          "Principal": ["${SMExecutionRole.Arn}", "${OSPipelineExecutionRole.Arn}"]}]
+
+  SMExecutionRole: 
+    Type: "AWS::IAM::Role"
+    Properties: 
+      Policies:
+        - PolicyName: "AOSSAPIAccessAll"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "aoss:APIAccessAll"
+                Resource: !Sub "arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:collection/*"
+        - PolicyName: "OSISIngest"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "osis:Ingest"
+                Resource: !Sub "arn:aws:osis:${AWS::Region}:${AWS::AccountId}:pipeline/*"
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - 
+            Effect: "Allow"
+            Principal: 
+              Service: 
+                - "sagemaker.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Path: "/"
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonSageMakerFullAccess"
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonS3FullAccess"
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonOpenSearchServiceFullAccess"
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AmazonBedrockFullAccess"
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AWSCloudFormationReadOnlyAccess"
+
+  OSPipelineExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - 
+            Effect: "Allow"
+            Principal: 
+              Service: 
+                - "osis-pipelines.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Path: "/"
+  
+  LambdaBasicExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Effect: "Allow"
+          Principal:
+            Service: "lambda.amazonaws.com"
+          Action: "sts:AssumeRole"
+      Path: /
+      Policies:
+        - PolicyName: "S3Access"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "s3:*"
+                Resource: "*"
+        - PolicyName: "AWSLambdaBasicExecutionRole"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "arn:aws:logs:*:*:*"
+
+  S3Bucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      BucketName: !Join 
+        - "-"
+        - - !Ref BucketName
+          - !Ref "AWS::AccountId"
+          - !Ref "AWS::Region"
+
+  MultimodalNotebookInstance:
+    Type: "AWS::SageMaker::NotebookInstance"
+    Properties:
+      InstanceType: "ml.t3.xlarge"
+      VolumeSizeInGB: 200
+      RoleArn: !GetAtt SMExecutionRole.Arn
+      DefaultCodeRepository: "https://github.com/aws-samples/multimodal-rag-on-slide-decks.git"
+
+  MultimodalCollection:
+    Type: "AWS::OpenSearchServerless::Collection"
+    Properties:
+      Name: !Ref OSCollectionName
+      Type: "VECTORSEARCH"
+      Description: "Embeddings collection"
+    DependsOn: [SecurityPolicy, NetworkPolicy, DataAccessAdminPolicy, DataAccessPolicy]
+
+  LogGroup:
+    Type: "AWS::Logs::LogGroup"
+    Properties:
+      LogGroupName: !Sub "/aws/vendedlogs/multimodalpipeline-${AWS::StackName}"
+
+  MultimodalPipelineForText:
+    Type: "AWS::OSIS::Pipeline"
+    Properties:
+      LogPublishingOptions:
+        IsLoggingEnabled: true
+        CloudWatchLogDestination:
+          LogGroup: !Ref LogGroup
+      MinUnits: 2
+      MaxUnits: 4
+      PipelineConfigurationBody: !Sub |
+        version: "2"
+        slide-pipeline:
+          source:
+            http:
+              path: "/data/ingest"
+          processor:
+          - date:
+              destination: "@timestamp"
+              from_time_received: true
+          sink:
+            - opensearch:
+                hosts: [${MultimodalCollection.CollectionEndpoint}]
+                index: ${OSTextIndexName}
+                aws:
+                  serverless: true
+                  serverless_options:
+                    network_policy_name: ${NetworkPolicyName}
+                  sts_role_arn: ${OSPipelineExecutionRole.Arn}
+                  region: ${AWS::Region}
+      PipelineName: "text-multimodalpipeline"
+      
+  MultimodalPipelineForImg:
+    Type: "AWS::OSIS::Pipeline"
+    Properties:
+      LogPublishingOptions:
+        IsLoggingEnabled: true
+        CloudWatchLogDestination:
+          LogGroup: !Ref LogGroup
+      MinUnits: 2
+      MaxUnits: 4
+      PipelineConfigurationBody: !Sub |
+        version: "2"
+        slide-pipeline:
+          source:
+            http:
+              path: "/data/ingest"
+          processor:
+          - date:
+              destination: "@timestamp"
+              from_time_received: true
+          sink:
+            - opensearch:
+                hosts: [${MultimodalCollection.CollectionEndpoint}]
+                index: ${OSImgIndexName}
+                aws:
+                  serverless: true
+                  serverless_options:
+                    network_policy_name: ${NetworkPolicyName}
+                  sts_role_arn: ${OSPipelineExecutionRole.Arn}
+                  region: ${AWS::Region}
+      PipelineName: "img-multimodalpipeline"
+
+  cleanupBucketOnDelete:
+    Type: Custom::cleanupbucket
+    Properties:
+      ServiceToken: !GetAtt 'DeleteS3Bucket.Arn'
+      BucketName: !Ref S3Bucket
+    DependsOn: S3Bucket
+
+  DeleteS3Bucket:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Handler: index.lambda_handler
+      FunctionName: "multimodal_blog4_deletes3_contents"
+      Description: "Delete all objects in S3 bucket"
+      Timeout: 30
+      Role: !GetAtt 'LambdaBasicExecutionRole.Arn'
+      Runtime: python3.9
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref S3Bucket
+      Code:
+        ZipFile: |
+          import json, boto3, logging
+          import cfnresponse
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+
+          def lambda_handler(event, context):
+              logger.info("event: {}".format(event))
+              try:
+                  bucket = event['ResourceProperties']['BucketName']
+                  logger.info("bucket: {}, event['RequestType']: {}".format(bucket,event['RequestType']))
+                  if event['RequestType'] == 'Delete':
+                      s3 = boto3.resource('s3')
+                      bucket = s3.Bucket(bucket)
+                      for obj in bucket.objects.filter():
+                          logger.info("delete obj: {}".format(obj))
+                          s3.Object(bucket.name, obj.key).delete()
+
+                  sendResponseCfn(event, context, cfnresponse.SUCCESS)
+              except Exception as e:
+                  logger.info("Exception: {}".format(e))
+                  sendResponseCfn(event, context, cfnresponse.FAILED)
+
+          def sendResponseCfn(event, context, responseStatus):
+              responseData = {}
+              responseData['Data'] = {}
+              cfnresponse.send(event, context, responseStatus, responseData, "CustomResourcePhysicalID")            
+
+Outputs:
+  BucketName:
+    Description: "Name of the bucket created"
+    Value: !Ref S3Bucket
+  MultimodalNotebookInstanceId:
+    Description: "SageMaker Notebook instance ID"
+    Value: !Ref MultimodalNotebookInstance
+  MultimodalCollectionEndpoint:
+    Description: "OpenSearch Collection endpoint"
+    Value: 
+      !GetAtt MultimodalCollection.CollectionEndpoint
+  OpenSearchTextIndexName:
+    Description: "OpenSearch Vector Index for text embeddings"
+    Value: !Ref OSTextIndexName
+  OpenSearchImgIndexName:
+    Description: "OpenSearch Vector Index for image embeddings"
+    Value: !Ref OSImgIndexName
+  OpenSearchPipelineTextEndpoint:
+    Description: "OpenSearch Pipeline endpoint for text embeddings"
+    Value: !Select [0, !GetAtt MultimodalPipelineForText.IngestEndpointUrls]
+  OpenSearchPipelineImgEndpoint:
+    Description: "OpenSearch Pipeline endpoint for images embeddings"
+    Value: !Select [0, !GetAtt MultimodalPipelineForImg.IngestEndpointUrls]
+

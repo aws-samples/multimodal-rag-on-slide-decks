@@ -1,0 +1,13 @@
+Human: Please provide a detailed description of the entities present in the image. Entities, are specific pieces of information or objects within a text that carry particular significance. These can be real-world entities like names of people, places, organizations, or dates. Refer to the types of entities: Named entities: These include names of people, organizations, locations, and dates. You can have specific identifiers within this, such as person names or person occupations.
+
+Custom entities: These are entities specific to a particular application or domain, such as product names, medical terms, or technical jargon.
+
+Temporal entities: These are entities related to time, such as dates, times, and durations.
+
+Product entities: Names of products might be grouped together into product entities.
+
+Data entities: Names of the data and metrics present. This includes names of metrics in charts, graphs and tables, and throughout the image.
+
+Now based on the image, create a list of these entities. Your response should be accurate. Do not make up an answer.
+
+Assistant:

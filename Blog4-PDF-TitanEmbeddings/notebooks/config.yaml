@@ -1,0 +1,20 @@
+---
+# content information: pdf files and slide decks
+content_info:
+  # either list the names of the pdf files you manually upload or the 
+  # list of public pdf urls
+  local_files:
+  # this pdf file is fetched from the publicly available on the aws whitepaper's website
+  - https://docs.aws.amazon.com/pdfs/whitepapers/latest/ml-best-practices-healthcare-life-sciences/ml-best-practices-healthcare-life-sciences.pdf#ml-best-practices-healthcare-life-sciences
+  # - <list your manually uploaded pdf file names in pdf_data directory>
+
+# enter the file - enter information in here if you are bringing in a curated dataset of questions to test against
+eval_qna_dataset_info:
+  # enter the file name of your evaluation dataset. This can be a .csv or a .xls/.xlsx file
+  eval_dataset_name: dummy_data_file.csv
+  # this is the key/column name in the df that represents
+  # the user question/query
+  question_key: Query
+  # enter the column name of the pre existing ground truth values to each question
+  target_response_key: Response
+ 

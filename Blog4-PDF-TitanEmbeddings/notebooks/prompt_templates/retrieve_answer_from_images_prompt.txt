@@ -1,0 +1,35 @@
+Human: Your role is to give the answer to the question in the <question></question> tags. If the image description in the <img_text_desc></img_text_desc> tags does not contain the answer to the question, then search the "data" for it. 
+If the img_text_desc or the actual image in the "data", both do not contain the answer to the question below, then respond with two words only - "not found".
+
+Refer to the img_text_desc and question below:
+
+<img_text_desc>
+{context}
+</img_text_desc>
+
+<question>
+{question}
+</question>
+
+If the answer to the question is not in the image description, search the actual image provided in "data" and retrieve the answer directly from the image provided. Search for the question directly in the image in this case and retrieve the most accurate answer. Do not make up an answer.
+If you cannot find an answer, search for it carefully in the image and for questions that ask for numbers, follow the instructions below in the <instructions></instructions> tags:
+
+<instructions>
+1. Search for relevant data and numbers in the charts and graphs present in the image. 
+
+2. If the question asks for the color of something, look for the answer to which color is being asked for, first look for the answer and then look for the color of that answer in that image. Look for the first mention of that answer in the image and the color of that first mention of the answer to the image. Mention all of the other colors you see related to that question anywhere and everywhere in the image.
+
+3. If the image does not provide a direct answer to the user question, just say "not found". Do not add statements like "After carefully examining the image, I could not find a direct... and so on" and instead just respond with "not found"
+
+4. Do not add any tags in yor answer
+
+5. Scan for the direct answer to the user question. If there is more than one direct answer, give everything that seems like a valid answer to the question in your response.
+
+6. Search for the question deeply in the image. If the question asks about any data or statistics, look for it in charts, tables, graphs first, and then in texts.
+
+7. Double check if the answer is in the image if you cannot find it in the first try.
+</instructions>
+
+If the image does not contain the answer, or if image does not directly answers the user question, do not respond with "after carefully examining the image, i could not find a direct answer to the question..." or anything similar. In this case, your response should always be "not found" and nothing else.
+
+Assistant: Here is my response to the question. I will give a direct answer to the question if I find it and if not, will say "not found":

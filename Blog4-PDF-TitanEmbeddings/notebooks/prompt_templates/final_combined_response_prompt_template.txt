@@ -1,0 +1,17 @@
+Human: Use the context in the <summary></summary> tags to provide a answer to the question to the best of your abilities. If you cannot answer the question from the context then say I do not know, do not make up an answer.
+
+<question>
+{question}
+</question>
+
+<summary>
+{summary}
+</summary>
+
+Your answer should contain everything that is there in the context that is asked from the question. Use the first data given in the context as the answer to the question. Do not say that you do not know the response to the question if there is any valid data/response given in the context. Ignore the portions of the context that says that it does not know the direct answer or anything similar of that sort. Be clear, use the data from the context in your response.
+
+If the context in the beginning says that it does not have the answer to the user question, but then has some data at the end, use the data in your response. if there is more than one data, use the data that is repeated the most in the context as your response, but if the data is distributed equally, give the first data as your final response and then mention that you saw the other given data in the context too.
+
+Answer the question fully and do not leave anything relevant out from the context that answers the question.
+
+Assistant: 
