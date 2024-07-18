@@ -23,7 +23,7 @@ Please refer to Solution overview and design in Parts 1 & 2 of the series.
 
 We executed the solutions for Part 1 and Part 2 on a [sample manifest](qa.jsonl) created from SlideVQA. 
 
-<I>Note: The responses to the questions in the sample manifest are concise in fewer words. We updated the prompts in each approach to provide precise responses instead of verbose answers.</I>
+<I>Note: The responses to the questions in the sample manifest are concise in as few words as possible. We updated the prompts in each approach to provide precise responses instead of verbose answers. This helped in comparing the responses to the ground truth. </I>
 
 Below sections will briefly discuss the solutions and dive into the evaluation and pricing for each approach.
 
@@ -37,30 +37,30 @@ A prompt is created by combining the question and the image path and sent to LLa
 ##### Evaluation
 A precise response for each question in the manifest is recorded and compared to the ground truth provided by SlideVQA. 
 
-<I> Note: We used Claude 3 Sonnet instead of LLaVA 1.5-7b as mentioned in Part 1. The approach remains the same embed first and infer later, the model that compiles the final response is changed for simplicity. </I>
+<I> Note: We used Claude 3 Sonnet instead of LLaVA 1.5-7b as mentioned in the solution for Part 1. The approach remains the same, embed first and infer later, just the model that compiles the final response is changed for simplicity. </I>
 
 Using approach 1, we received about 60% accurate results to the questions in the manifest.
 
 #### Approach 2 (infer first, embed later)
 
-Slide decks are converted into pdf images, one per slide, and passed to the Claude 3 Sonnet model to generate text description. The description is sent to the Titan Text Embeddings model to generate vector embeddings with 1,536 dimensions. The embeddings are ingested into OpenSearch Serverless index via OSI pipeline. 
+Slide decks are converted into pdf images, one per slide, and passed to the Claude 3 Sonnet model to generate a text description. The description is sent to the Titan Text Embeddings model to generate vector embeddings with 1,536 dimensions. The embeddings are ingested into OpenSearch Serverless index via OSI pipeline. 
 
 Each question is converted into embeddings using the Titan Text Embeddings model and an OpenSearch vector search is performed using these embeddings. We performed a k-nearest neighbor (knn) search to retrieve the most relevant embedding matching the question. The metadata of the response from OpenSearch index contains the image description corresponding to the most relevant slide.
 
-Claude 3 Sonnet uses a prompt created by combining the question and the image description to respond with a precise answer.
+We create a prompt with the question and the image description and pass it to Claude 3 Sonnet to receive a precise answer.
 
 ##### Evaluation
 A precise response for each question in the manifest is recorded and compared to the ground truth provided by SlideVQA. 
 
-With approach 2, infer first and embed later, we received 48% accurate results on the sample manifest.
+With approach 2, infer first and embed later, we received 48% accurate results for questions in our sample manifest.
 
 #### Conclusion
 
-Our random selection of slide decks covered a wide variety of industries including retail, healthcare, academic, technology, personal, travel etc. The embeddings were all ingested into a single index. The final prompt to Claude 3 included instructions to provide a precise answer in fewer words to compare it with the source of truth. We assume the results will be more accurate and elaborate with your datasets and prompts.
+Our random selection of slide decks covered a wide variety of industries including retail, healthcare, academic, technology, personal, travel etc. The embeddings were all ingested into a single index. The final prompt to Claude 3 Sonnet included instructions to provide a precise answer in as few words as possible to compare with the source of truth. We assume the results maybe more accurate with your datasets since they belong to a specific category. You may also receive elaborate responses based on your prompts.
 
 ### Pricing
 
-Pricing is dependent on the modality, provider, and model used. Please refer to the detailed public pricing for Amazon Bedrock [here](https://aws.amazon.com/bedrock/pricing/). We use the On-Demand and Batch pricing mode. It allows you to use FMs on a pay-as-you-go basis without having to make any time-based term commitments. For text-generation models, you are charged for every input token processed and every output token generated. For embeddings models, you are charged for every input token processed.
+Pricing is dependent on the modality, provider, and model used. Please refer to the detailed public pricing for Amazon Bedrock [here](https://aws.amazon.com/bedrock/pricing/). We use the On-Demand and Batch pricing mode in our analysis. It allows you to use FMs on a pay-as-you-go basis without having to make any time-based term commitments. For text-generation models, you are charged for every input token processed and every output token generated. For embeddings models, you are charged for every input token processed.
 
 The below table shows price per question for each approach. 
 
@@ -74,7 +74,7 @@ The below table shows price per question for each approach.
 | Titan   Multimodal Embeddings 	| Question embedding                	| $0.0001                   	| 1               	| $0.000000    	| $0.0000                   	| 0               	| $0.000000        	|
 | Claude 3   Sonnet             	| Final response                    	| $0.0030                   	| 700             	| $0.002100    	| $0.0150                   	| 8               	| $0.000120        	|
 | Cost per   input/output       	|                                   	|                           	|                 	| $0.002100    	|                           	|                 	| $0.000120        	|
-| **Total cost per   question** 	|                                   	|                           	|                 	|              	|                           	|                 	| **$0.002220   ** 	|
+| **Total cost per   question** 	|                                   	|                           	|                 	|              	|                           	|                 	| **$0.002220** 	|
 |                               	|                                   	|                           	|                 	|              	|                           	|                 	|                  	|
 |                               	|                                   	|       **Approach 2**      	|                 	|              	|                           	|                 	|                  	|
 |                               	|                                   	|      **Input tokens**     	|                 	|              	|     **Output tokens**     	|                 	|                  	|
@@ -84,7 +84,7 @@ The below table shows price per question for each approach.
 | Titan Text   Embeddings       	| Question embedding                	| $0.0001                   	| 20              	| $0.000002    	| $0.0000                   	| 0               	| $0.000000        	|
 | Claude 3   Sonnet             	| Final response                    	| $0.0030                   	| 700             	| $0.002100    	| $0.0150                   	| 8               	| $0.000120        	|
 | Cost per   input/output       	|                                   	|                           	|                 	| $0.002317    	|                           	|                 	| $0.005370        	|
-| **Total cost per   question** 	|                                   	|                           	|                 	|              	|                           	|                 	| **$0.007687   ** 	|
+| **Total cost per   question** 	|                                   	|                           	|                 	|              	|                           	|                 	| **$0.007687** 	|
 
 
 
@@ -95,7 +95,7 @@ Multimodal Embeddings, Titan
 Text Embeddings and Claude 3 Sonnet models to discover new information
 and uncover new perspectives on content in slide decks. We encourage you to explore different Claude models available on Bedrock.
 
-With Generative AI being a fast moving space, there are several ways to improve the results and/or approach the problem in different ways. Some ideas we are exploring are performing a hybrid search and adding filters by extracting entities from the question. Lookout for a blog on "Talk to your PDF files (Enhanced Multimodal RAG) using foundation models (FMs) hosted on Amazon Bedrock and Hybrid Search" that will explore these concepts in detail.
+With Generative AI being a fast moving space, there are several ways to improve the results and/or approach the problem. We are exploring performing a hybrid search and adding search filters by extracting entities from the question to improve the results. Lookout for a blog on "Talk to your PDF files (Enhanced Multimodal RAG) using foundation models (FMs) hosted on Amazon Bedrock and hybrid search" that will explore these concepts in detail.
 
 
 Portions of this code are released under the Apache 2.0 License as
