@@ -28,6 +28,7 @@ We executed the solutions for Part 1 and Part 2 on a [sample manifest](qa.jsonl)
 Below sections will briefly discuss the solutions and dive into the evaluation and pricing for each approach.
 
 #### Approach 1 (embed first, infer later)
+
 Slide decks are converted into pdf images, one per slide, and embedded using the Titan Multimodal Embeddings model, resulting in a vector embedding of 1,024 dimensions. The embeddings are stored in OpenSearch Serverless index which serves as the vector store for our RAG solution. The embeddings are ingested via [Amazon OpenSearch Ingestion Pipeline](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/ingestion.html) (OSI).
 
 Each question is converted into embeddings using the Titan Multimodal Embeddings model and an OpenSearch vector search is performed using these embeddings. We performed a k-nearest neighbor (knn) search to retrieve the most relevant embedding matching the question. The metadata of the response from OpenSearch index contains a path to the image corresponding to the most relevant slide.
@@ -35,11 +36,12 @@ Each question is converted into embeddings using the Titan Multimodal Embeddings
 A prompt is created by combining the question and the image path and sent to LLaVA 1.5-7b to respond to the question with a precise answer.
 
 ##### Evaluation
+
 A precise response for each question in the manifest is recorded and compared to the ground truth provided by SlideVQA. 
 
 <I> Note: We used Claude 3 Sonnet instead of LLaVA 1.5-7b as mentioned in the solution for Part 1. The approach remains the same, embed first and infer later, just the model that compiles the final response is changed for simplicity. </I>
 
-Using approach 1, we received about 60% accurate results to the questions in the manifest.
+Using approach 1, we received about 50% accurate results to the questions in the manifest.
 
 #### Approach 2 (infer first, embed later)
 
@@ -50,13 +52,16 @@ Each question is converted into embeddings using the Titan Text Embeddings model
 We create a prompt with the question and the image description and pass it to Claude 3 Sonnet to receive a precise answer.
 
 ##### Evaluation
+
 A precise response for each question in the manifest is recorded and compared to the ground truth provided by SlideVQA. 
 
-With approach 2, infer first and embed later, we received 48% accurate results for questions in our sample manifest.
+With approach 2, infer first and embed later, we received 44% accurate results for questions in our sample manifest.
 
-#### Conclusion
+#### Analysis of results
 
-Our random selection of slide decks covered a wide variety of industries including retail, healthcare, academic, technology, personal, travel etc. The embeddings were all ingested into a single index. The final prompt to Claude 3 Sonnet included instructions to provide a precise answer in as few words as possible to compare with the source of truth. We assume the results maybe more accurate with your datasets since they belong to a specific category. You may also receive elaborate responses based on your prompts.
+In our testing, both approaches produced 50% or less accurate results to the questions in the manifest. Our random selection of slide decks covered a wide variety of industries including retail, healthcare, academic, technology, personal, travel etc. The embeddings were all ingested into a single index. So a generic question like "What are examples of tools that can be used?" would have no additional context. The closest match can be retrieved from a completely different slide deck, hence not matching the accurate response. We will suggest ways these results can be improved in the conclusion below.
+
+The final prompt to Claude 3 Sonnet in our analysis included instructions to provide a precise answer in as few words as possible to be able to compare with the ground truth. We assume your responses will depend on your prompts to the large language model.
 
 ### Pricing
 
@@ -92,7 +97,7 @@ The below table shows price per question for each approach.
 
 In this series, we explored ways to use the power of multimodal FMs such as Titan
 Multimodal Embeddings, Titan
-Text Embeddings and Claude 3 Sonnet models to discover new information
+Text Embeddings, and Claude 3 Sonnet models to discover new information
 and uncover new perspectives on content in slide decks. We encourage you to explore different Claude models available on Bedrock.
 
 With Generative AI being a fast moving space, there are several ways to improve the results and/or approach the problem. We are exploring performing a hybrid search and adding search filters by extracting entities from the question to improve the results. Lookout for a blog on "Talk to your PDF files (Enhanced Multimodal RAG) using foundation models (FMs) hosted on Amazon Bedrock and hybrid search" that will explore these concepts in detail.
