@@ -59,7 +59,7 @@ With approach 2, infer first and embed later, we received 44% accurate results f
 
 #### Analysis of results
 
-In our testing, both approaches produced 50% or less accurate results to the questions in the manifest. Our random selection of slide decks covered a wide variety of industries including retail, healthcare, academic, technology, personal, travel etc. The embeddings were all ingested into a single index. So a generic question like "What are examples of tools that can be used?" would have no additional context. The closest match can be retrieved from a completely different slide deck, hence not matching the accurate response. We will suggest ways these results can be improved in the conclusion below.
+In our testing, both approaches produced <=50% accurate results to the questions in the manifest. Our random selection of slide decks covered a wide variety of industries including retail, healthcare, academic, technology, personal, travel etc. The embeddings were all ingested into a single index. So a generic question like "What are examples of tools that can be used?" would have no additional context. The closest match can be retrieved from a completely different slide deck, hence not matching the accurate response. We will provide a sneakpeek into ways to improve these results in the conclusion below.
 
 The final prompt to Claude 3 Sonnet in our analysis included instructions to provide a precise answer in as few words as possible to be able to compare with the ground truth. We assume your responses will depend on your prompts to the large language model.
 
