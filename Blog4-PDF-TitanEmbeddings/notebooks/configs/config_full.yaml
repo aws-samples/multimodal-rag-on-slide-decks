@@ -157,3 +157,21 @@ eval_qna_dataset_info:
   question_key: Query
   target_response_key: Response
   updated_eval_file: updated_eval_dataset.csv
+
+# this is the search pipeline that uses various ways to generate a response. 
+# the first way is to do a single search - look for the answer in the text or the image index
+# the second way is to do a simple search - look for the answer in the text AND the image description
+# the third way is to do an enhanced search - look for the answer in the text, image descriptions and also
+# within the image itself directly
+# the fourth way is to do a full search - to iterate through each text, image description, search for potential
+# answers in the descriptions and then based on the final information collected, summarize and give that to the end
+# user
+rag_search_pipeline:
+  # This can either be a full search, single search, simple search or an enhanced search
+  # default is set to full search
+  search_type: "simple_search" # options: enhanced_search, simple_search
+  # if you want to break out of the rag search loop right when the 
+  # answer is found, then set 'summarize_all_hits' to yes. If your use case
+  # might have an answer in more than a page (consecutive pages)
+  # then set below to no
+  summarize_all_hits: yes
