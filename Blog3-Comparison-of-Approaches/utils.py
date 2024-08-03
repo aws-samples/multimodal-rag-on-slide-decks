@@ -19,19 +19,6 @@ logger = logging.getLogger(__name__)
 
 s3 = boto3.client('s3')
 
-llm_prompt: str = """
-
-Human: Use the summary to provide a concise answer to the question to the best of your abilities. If you cannot answer the question from the context then say I do not know, do not make up an answer.
-<question>
-{question}
-</question>
-
-<summary>
-{summary}
-</summary>
-
-Assistant:"""
-
 def upload_to_s3(local_file_path:str, bucket_name: str, bucket_prefix:str) -> None:
     global s3
     try:
@@ -73,7 +60,7 @@ def encode_image_to_base64(image_file_path: str) -> str:
             b64_image_file.write(bytes(b64_image, 'utf-8'))
     return b64_image_path
 
-def find_similar_data(os_client: OpenSearch, text_embeddings: np.ndarray, size: int, index_name: str) -> Dict:
+def find_similar_data(os_client: OpenSearch, text_embeddings: np.ndarray, size: int, index_name: str, deck_name: str, deck_url: str) -> Dict:
     query = {
         "size": size,
         "query": {
@@ -85,12 +72,10 @@ def find_similar_data(os_client: OpenSearch, text_embeddings: np.ndarray, size: 
             }
         }
     }
+
     try:
         image_based_search_response = os_client.search(body=query, index=index_name)
-        # remove the vector_embedding field for readability purposes, it was needed during
-        # the similarity search (by the vector db), we do not need it any more.
-        source = image_based_search_response['hits']['hits'][0]['_source'].pop('vector_embedding')
-        logger.info("received response from OpenSearch") #, response={json.dumps(image_based_search_response, indent=2)}")
+        logger.info("received response from OpenSearch")
     except Exception as e:
         logger.error(f"error occured while querying OpenSearch index={index_name}, exception={e}")
         image_based_search_response = None
@@ -105,6 +90,7 @@ def get_img_desc(bedrock: botocore.client, image_file_path: str, prompt: str):
         {
             "anthropic_version": "bedrock-2023-05-31",
             "max_tokens": 1000,
+            "temperature": 0,
             "messages": [
                 {
                     "role": "user",
@@ -164,34 +150,3 @@ def get_text_embedding(bedrock: botocore.client, prompt_data: str, modelID: str)
         embedding = None
 
     return embedding
-
-def get_llm_response(bedrock: botocore.client, question: str, summary: str) -> str:
-    prompt = llm_prompt.format(question=question, summary=summary)
-    
-    body = json.dumps(
-    {
-        "anthropic_version": "bedrock-2023-05-31",
-        "max_tokens": 1000,
-        "messages": [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt},
-                ],
-            }
-        ],
-    })
-        
-    try:
-        response = bedrock.invoke_model(
-        modelId=g.CLAUDE_MODEL_ID,
-        body=body)
-
-        response_body = json.loads(response['body'].read().decode("utf-8"))
-        llm_response = response_body['content'][0]['text'].replace('"', "'")
-        
-    except Exception as e:
-        logger.error(f"exception while slide_text={summary[:10]}, exception={e}")
-        llm_response = None
-
-    return llm_response
