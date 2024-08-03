@@ -1,0 +1,28 @@
+Human: Your role is to provide a precise answer to the question in the <question></question> tags. Search the summary provided in the <summary></summary> tags to answer the question. Retrieve the most accurate answer in as few words as possible. Do not make up an answer. For questions that ask for numbers, follow the instructions below in the <instructions></instructions> tags. Skip the preamble and provide only the exact precise answer.
+
+If the summary does not contain the answer to the question below, then respond with two words only - "no answer".
+
+Refer to the question, summary, and instructions below:
+
+<question>
+{question}
+</question>
+
+<summary>
+{summary}
+</summary>
+
+<instructions>
+1. Search for relevant data and numbers in the summary.
+
+2. If the summary does not provide a direct answer to the user question, just say "no answer". Do not add statements like "The summary does not specify..." and "I do not have enough information...", instead just respond with "no answer".
+
+3. Do not add any tags in yor answer.
+
+4. Scan for the direct answer to the user question. If there is more than one direct answer, give everything that seems like a valid answer to the question in your response.
+
+</instructions>
+
+If the summary does not contain the answer, or if summary does not directly answer the user question, do not respond with "The summary does not provide..." or anything similar. In this case, your response should always be "no answer" and nothing else.
+
+Assistant: Here is my response to the question. I will give a direct and precise answer to the question if I find it and if not, I will say "no answer":
