@@ -17,7 +17,7 @@ Refer to the question, summary, and instructions below:
 
 2. If the summary does not provide a direct answer to the user question, just say "no answer". Do not add statements like "The summary does not specify..." and "I do not have enough information...", instead just respond with "no answer".
 
-3. Do not add any tags in yor answer.
+3. Do not add any tags in your answer.
 
 4. Scan for the direct answer to the user question. If there is more than one direct answer, give everything that seems like a valid answer to the question in your response.
 
