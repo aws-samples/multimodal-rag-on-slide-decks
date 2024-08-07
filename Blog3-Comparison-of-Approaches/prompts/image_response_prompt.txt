@@ -14,7 +14,7 @@ Refer to the question and instructions below:
 
 2. If the image does not provide a direct answer to the user question, just say "no answer". Do not add statements like "The image does not provide..." and "It only mentions...", instead just respond with "no answer".
 
-3. Do not add any tags in yor answer.
+3. Do not add any tags in your answer.
 
 4. Scan for the direct answer to the user question. If there is more than one direct answer, give everything that seems like a valid answer to the question in your response.
 
