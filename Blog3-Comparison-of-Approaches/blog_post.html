@@ -3061,18 +3061,15 @@ vertical-align: -.125em;
 
 <p><em>Archana Inapudi</em>, <em>Manju Prasad</em>, <em>Amit Arora</em>, <em>Antara Raisa</em></p>
 <p>In the “Talk to your slide deck” blog series, we share two approaches to gain insights on multimodal data like text, images, and charts. In <a href="https://aws.amazon.com/blogs/machine-learning/talk-to-your-slide-deck-using-multimodal-foundation-models-hosted-on-amazon-bedrock-and-amazon-sagemaker-part-1/">part 1</a>, we presented an “embed first, infer later” solution that uses <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/titan-multiemb-models.html">Amazon Titan Multimodal Embeddings</a> model to convert individual slides from a slide deck into embeddings. We stored the embeddings in a vector database and then used the <a href="https://llava-vl.github.io/">Large Language-and-Vision Assistant (LLaVA 1.5-7b)</a> model to generate text responses to user questions based on the most similar slide retrieved from the vector database. Part 1 uses AWS services including <a href="https://aws.amazon.com/bedrock/">Amazon Bedrock</a>, <a href="https://aws.amazon.com/sagemaker/">Amazon SageMaker</a>, and <a href="https://aws.amazon.com/opensearch-service/features/serverless/">Amazon OpenSearch Serverless</a>.</p>
-<p>In <a href="https://aws.amazon.com/blogs/machine-learning/talk-to-your-slide-deck-using-multimodal-foundation-models-hosted-on-amazon-bedrock-and-amazon-sagemaker-part-2/">part 2</a>, we demonstrated a different approach “infer first, embed later”. We used <a href="https://aws.amazon.com/bedrock/claude/">Anthropic Claude 3 Sonnet</a> model to generate text descriptions for each slide in the slide deck. These descriptions are then converted into text embeddings using <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/titan-embedding-models.html">Amazon Titan Text Embeddings</a> model and stored in a vector database. Then we used the Claude 3 Sonnet model to generate answers to user questions based on the most relevant text description retrieved from the vector database.</p>
+<p>In <a href="https://aws.amazon.com/blogs/machine-learning/talk-to-your-slide-deck-using-multimodal-foundation-models-hosted-on-amazon-bedrock-and-amazon-sagemaker-part-2/">part 2</a>, we demonstrated a different approach “infer first, embed later”. We used <a href="https://aws.amazon.com/bedrock/claude/">Anthropic’s Claude 3 Sonnet</a> model to generate text descriptions for each slide in the slide deck. These descriptions are then converted into text embeddings using <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/titan-embedding-models.html">Amazon Titan Text Embeddings</a> model and stored in a vector database. Then we used the Claude 3 Sonnet model to generate answers to user questions based on the most relevant text description retrieved from the vector database.</p>
 <p>In this post, we evaluate the results from both approaches using ground truth provided by <a href="https://github.com/nttmdlab-nlp/SlideVQA">SlideVQA</a>, an open-source visual question answering dataset. You can test both approches and evaluate the results to find the best fit for your datasets. The code for this series is available in the <a href="https://github.com/aws-samples/multimodal-rag-on-slide-decks/tree/main">GitHub</a> repo.</p>
-<section id="solution-overview" class="level2">
-<h2 class="anchored" data-anchor-id="solution-overview">Solution overview</h2>
-<p>Please refer to Solution overview and design in Parts 1 &amp; 2 of the series.</p>
-</section>
-<section id="comparison" class="level2">
-<h2 class="anchored" data-anchor-id="comparison">Comparison</h2>
-<p>SlideVQA is a collection of publicly available slide decks, each composed of multiple slides (in jpg format) and questions based on the information in the slide decks. It allows a system to select a set of evidence images and answer the question. We use SlideVQA as the single source of truth to compare the results.</p>
+<section id="comparison-of-approaches" class="level2">
+<h2 class="anchored" data-anchor-id="comparison-of-approaches">Comparison of Approaches</h2>
+<p>SlideVQA is a collection of publicly available slide decks, each composed of multiple slides (in jpg format) and questions based on the information in the slide decks. It allows a system to select a set of evidence images and answer the question. We use SlideVQA as the single source of truth to compare the results. It is important that you follow the <a href="https://docs.aws.amazon.com/bedrock/latest/userguide/data-protection.html">AWS Bedrock Data Protection</a> policies when using public datasets.</p>
 <section id="process" class="level3">
 <h3 class="anchored" data-anchor-id="process">Process</h3>
 <p>This post will follow the process depicted in the diagram below.</p>
+<p><em>Note: Please refer to solution overview and design in parts 1 &amp; 2 of the series.</em></p>
 <div id="fig-process-flow" class="quarto-figure quarto-figure-center quarto-float anchored">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-process-flow-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
@@ -3083,9 +3080,10 @@ Figure 1: Process flow
 </figcaption>
 </figure>
 </div>
-<p>SlideVQA is a large question answering dataset comprising of thousands of slide decks. We selected 100 random questions to create a <a href="qa.jsonl">sample dataset</a> to test solutions from Part 1 and Part 2.</p>
+<p>SlideVQA is a large question answering dataset comprising of thousands of slide decks. We selected 100 random questions to create a <a href="https://github.com/aws-samples/multimodal-rag-on-slide-decks/blob/main/Blog3-Comparison-of-Approaches/qa.jsonl">sample dataset</a> to test solutions from part 1 and part 2.</p>
 <p>The responses to the questions in the sample dataset are concise in as few words as possible, see examples below.</p>
 <pre><code>&quot;question&quot;: &quot;What is the process by which the breaking of hydrogen bonds allows water to change from the liquid phase into the gaseous phase which has reached equilibrium with the liquid surface said to have done?&quot;
+
 &quot;answer&quot;: &quot;reached saturation&quot;</code></pre>
 <p>The responses from large language models (LLMs) are quite verbose.</p>
 <pre><code>According to the information provided in the images, the process by which the breaking of hydrogen bonds allows water to change from the liquid phase into the gaseous phase that has reached equilibrium with the liquid surface is said to have reached saturation.
@@ -3105,11 +3103,38 @@ So in summary, the breaking of hydrogen bonds provides the mechanism for water m
 <h4 class="anchored" data-anchor-id="approach-1-embed-first-infer-later">Approach 1 (embed first, infer later)</h4>
 <p>Slide decks are converted into pdf images, one per slide, and embedded using the Titan Multimodal Embeddings model, resulting in a vector embedding of 1,024 dimensions. The embeddings are stored in OpenSearch Serverless index which serves as the vector store for our RAG solution. The embeddings are ingested via <a href="https://docs.aws.amazon.com/opensearch-service/latest/developerguide/ingestion.html">Amazon OpenSearch Ingestion Pipeline</a> (OSI).</p>
 <p>Each question is converted into embeddings using the Titan Multimodal Embeddings model and an OpenSearch vector search is performed using these embeddings. We performed a k-nearest neighbor (knn) search to retrieve the most relevant embedding matching the question. The metadata of the response from OpenSearch index contains a path to the image corresponding to the most relevant slide.</p>
-<p>A prompt is created by combining the question and the image path and sent to Claude 3 Sonnet to respond to the question with a concise answer.</p>
-<p><i> Note: We used Claude 3 Sonnet instead of LLaVA 1.5-7b as mentioned in the solution for Part 1. The approach remains the same, “embed first, infer later”, just the model that compiles the final response is changed for simplicity and comparability between approaches. </i></p>
+<p>The below prompt is created by combining the question and the image path and sent to Claude 3 Sonnet to respond to the question with a concise answer.</p>
+<pre><code>Human: Your role is to provide a precise answer to the question in the &lt;question&gt;&lt;/question&gt; tags. Search the image provided to answer the question. Retrieve the most accurate answer in as few words as possible. Do not make up an answer. For questions that ask for numbers, follow the instructions below in the &lt;instructions&gt;&lt;/instructions&gt; tags. Skip the preamble and provide only the exact precise answer.
+
+If the image does not contain the answer to the question below, then respond with two words only - &quot;no answer&quot;.
+
+Refer to the question and instructions below:
+
+&lt;question&gt;
+{question}
+&lt;/question&gt;
+
+
+&lt;instructions&gt;
+1. Search for relevant data and numbers in the charts and graphs present in the image.
+
+2. If the image does not provide a direct answer to the user question, just say &quot;no answer&quot;. Do not add statements like &quot;The image does not provide...&quot; and &quot;It only mentions...&quot;, instead just respond with &quot;no answer&quot;.
+
+3. Do not add any tags in your answer.
+
+4. Scan for the direct answer to the user question. If there is more than one direct answer, give everything that seems like a valid answer to the question in your response.
+
+5. Search for the question deeply in the image. If the question asks about any data or statistics, look for it in charts, tables, graphs first, and then in texts. Check the headings in the image.
+
+&lt;/instructions&gt;
+
+If the image does not contain the answer, or if image does not directly answer the user question, do not respond with &quot;The image does not provide...&quot; or anything similar. In this case, your response should always be &quot;no answer&quot; and nothing else.
+
+Assistant: Here is my response to the question. I will give a direct and precise answer to the question if I find it and if not, I will say &quot;no answer&quot;:</code></pre>
+<p><em>Note: We used Claude 3 Sonnet instead of LLaVA 1.5-7b as mentioned in the solution for part 1. The approach remains the same, “embed first, infer later”, just the model that compiles the final response is changed for simplicity and comparability between approaches.</em></p>
 <section id="evaluation" class="level5">
 <h5 class="anchored" data-anchor-id="evaluation">Evaluation</h5>
-<p>A response for each question in the dataset is <a href="./notebooks/responses-appr1.json">recorded</a> and compared to the ground truth provided by SlideVQA.</p>
+<p>A response for each question in the dataset is <a href="https://github.com/aws-samples/multimodal-rag-on-slide-decks/blob/main/Blog3-Comparison-of-Approaches/notebooks/responses-appr1.json">recorded</a> and compared to the ground truth provided by SlideVQA.</p>
 <p>Approach 1 retrieved a response for 78% of the questions on a dataset of 100 questions achieving a 50% accuracy on the final responses.</p>
 </section>
 </section>
@@ -3117,26 +3142,53 @@ So in summary, the breaking of hydrogen bonds provides the mechanism for water m
 <h4 class="anchored" data-anchor-id="approach-2-infer-first-embed-later">Approach 2 (infer first, embed later)</h4>
 <p>Slide decks are converted into pdf images, one per slide, and passed to the Claude 3 Sonnet model to generate a text description. The description is sent to the Titan Text Embeddings model to generate vector embeddings with 1,536 dimensions. The embeddings are ingested into OpenSearch Serverless index via OSI pipeline.</p>
 <p>Each question is converted into embeddings using the Titan Text Embeddings model and an OpenSearch vector search is performed using these embeddings. We performed a k-nearest neighbor (knn) search to retrieve the most relevant embedding matching the question. The metadata of the response from OpenSearch index contains the image description corresponding to the most relevant slide.</p>
-<p>We create a prompt with the question and the image description and pass it to Claude 3 Sonnet to receive a precise answer.</p>
+<p>We create a prompt with the question and the image description and pass it to Claude 3 Sonnet to receive a precise answer. Below is the prompt template:</p>
+<pre><code>Human: Your role is to provide a precise answer to the question in the &lt;question&gt;&lt;/question&gt; tags. Search the summary provided in the &lt;summary&gt;&lt;/summary&gt; tags to answer the question. Retrieve the most accurate answer in as few words as possible. Do not make up an answer. For questions that ask for numbers, follow the instructions below in the &lt;instructions&gt;&lt;/instructions&gt; tags. Skip the preamble and provide only the exact precise answer.
+
+If the summary does not contain the answer to the question below, then respond with two words only - &quot;no answer&quot;.
+
+Refer to the question, summary, and instructions below:
+
+&lt;question&gt;
+{question}
+&lt;/question&gt;
+
+&lt;summary&gt;
+{summary}
+&lt;/summary&gt;
+
+&lt;instructions&gt;
+1. Search for relevant data and numbers in the summary.
+
+2. If the summary does not provide a direct answer to the user question, just say &quot;no answer&quot;. Do not add statements like &quot;The summary does not specify...&quot; and &quot;I do not have enough information...&quot;, instead just respond with &quot;no answer&quot;.
+
+3. Do not add any tags in your answer.
+
+4. Scan for the direct answer to the user question. If there is more than one direct answer, give everything that seems like a valid answer to the question in your response.
+
+&lt;/instructions&gt;
+
+If the summary does not contain the answer, or if summary does not directly answer the user question, do not respond with &quot;The summary does not provide...&quot; or anything similar. In this case, your response should always be &quot;no answer&quot; and nothing else.
+
+Assistant: Here is my response to the question. I will give a direct and precise answer to the question if I find it and if not, I will say &quot;no answer&quot;:</code></pre>
 <section id="evaluation-1" class="level5">
 <h5 class="anchored" data-anchor-id="evaluation-1">Evaluation</h5>
-<p>A response for each question in the dataset is <a href="./notebooks/responses-appr2.json">recorded</a> and compared to the ground truth provided by SlideVQA.</p>
+<p>A response for each question in the dataset is <a href="https://github.com/aws-samples/multimodal-rag-on-slide-decks/blob/main/Blog3-Comparison-of-Approaches/notebooks/responses-appr2.json">recorded</a> and compared to the ground truth provided by SlideVQA.</p>
 <p>With approach 2, we received 44% accuracy on final responses with 75% of the questions retrieving a response out of the 100 questions in the sample dataset.</p>
 </section>
 </section>
 <section id="analysis-of-results" class="level4">
 <h4 class="anchored" data-anchor-id="analysis-of-results">Analysis of results</h4>
-<p>In our testing, both approaches produced &lt;=50% matching results to the questions in the sample dataset. The sample dataset contains a random selection of slide decks covering a wide variety of topics including retail, healthcare, academic, technology, personal, travel etc. So for a generic question like “What are examples of tools that can be used?” that lacks additional context, the nearest match could retrieve responses from a variety of topics leading to inaccurate results.</p>
-<p>The embeddings were all ingested into a single index in OpenSearch. Embeddings are vectors which are essentially compressions of the “meaning” behind text into dimensions, 1,024 or 1,536 in this case. There is some information loss when we compress information into a single vector.</p>
+<p>In our testing, both approaches produced &lt;=50% matching results to the questions in the sample dataset. The sample dataset contains a random selection of slide decks covering a wide variety of topics including retail, healthcare, academic, technology, personal, travel etc. Thus, for a generic question like “What are examples of tools that can be used?” that lacks additional context, the nearest match could retrieve responses from a variety of topics leading to inaccurate results, especially when all embeddings are being ingested in the same OpenSearch index. The use of techniques such as hybrid search, pre-filtering based on metadata and re-ranking are expected to improve the retrieval accuracy.</p>
 <p>One of the solutions is to retrieve more results (increase the k value) and reorder them to keep the most relevant ones, this technique is called reranking. We will share additional ideas on ways to improve the accuracy of the results in the conclusion below.</p>
-<p>The <a href="./prompts/">final prompt</a> to Claude 3 Sonnet in our analysis included instructions to provide a concise answer in as few words as possible to be able to compare with the ground truth. We assume your responses will depend on your prompts to the LLM.</p>
+<p>The <a href="https://github.com/aws-samples/multimodal-rag-on-slide-decks/tree/main/Blog3-Comparison-of-Approaches/prompts">final prompts</a> to Claude 3 Sonnet in our analysis included instructions to provide a concise answer in as few words as possible to be able to compare with the ground truth. We assume your responses will depend on your prompts to the LLM.</p>
 </section>
 </section>
 <section id="pricing" class="level3">
 <h3 class="anchored" data-anchor-id="pricing">Pricing</h3>
 <p>Pricing is dependent on the modality, provider, and model used. Please refer to the detailed public pricing for Amazon Bedrock <a href="https://aws.amazon.com/bedrock/pricing/">here</a>. We use the On-Demand and Batch pricing mode in our analysis that allow you to use FMs on a pay-as-you-go basis without having to make any time-based term commitments. For text-generation models, you are charged for every input token processed and every output token generated. For embeddings models, you are charged for every input token processed.</p>
 <p>The below table shows price per question for each approach.</p>
-<p><i> Note: We calculated the average number of input and output tokens based on our sample dataset for us-east-1, pricing may vary for your datasets and Amazon region used. </i></p>
+<p><em>Note: We calculated the average number of input and output tokens based on our sample dataset for us-east-1, pricing may vary for your datasets and Amazon region used.</em></p>
 <table class="table">
 <colgroup>
 <col style="width: 14%">
@@ -3333,13 +3385,21 @@ So in summary, the breaking of hydrogen bonds provides the mechanism for water m
 </tr>
 </tbody>
 </table>
+<section id="cleanup" class="level4">
+<h4 class="anchored" data-anchor-id="cleanup">Cleanup</h4>
+<p>To avoid incurring charges, delete any resources from part 1 &amp; 2 of the solution. You can do this by deleting the stacks via the AWS CloudFormation console.</p>
+</section>
 </section>
 </section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
-<p>In this series, we explored ways to use the power of multimodal FMs such as Titan Multimodal Embeddings, Titan Text Embeddings, and Claude 3 Sonnet models to discover new information and uncover new perspectives on content in slide decks. We encourage you to explore different Claude models available on Bedrock.</p>
+<p>In this series, we explored ways to use the power of multimodal FMs such as Titan Multimodal Embeddings, Titan Text Embeddings, and Claude 3 Sonnet models to discover new information and uncover new perspectives on content in slide decks. We encourage you to explore different Claude models available on Bedrock with your organization’s slide content to uncover new perspectives. You can compare the two approaches to identify a better workflow for your slide decks.</p>
 <p>With Generative AI being a fast moving space, there are several ways to improve the results and/or approach the problem. We are exploring performing a hybrid search and adding search filters by extracting entities from the question to improve the results. Lookout for a blog on “Talk to your PDF files (Enhanced Multimodal RAG) using foundation models (FMs) hosted on Amazon Bedrock” that will explore these concepts in detail.</p>
-<p>Portions of this code are released under the Apache 2.0 License as referenced here: https://aws.amazon.com/apache-2-0/</p>
+</section>
+<section id="citations" class="level2">
+<h2 class="anchored" data-anchor-id="citations">Citations</h2>
+<p>Tanaka, Ryota &amp; Nishida, Kyosuke &amp; Nishida, Kosuke &amp; Hasegawa, Taku &amp; Saito, Itsumi &amp; Saito, Kuniko. (2023). SlideVQA: A Dataset for Document Visual Question Answering on Multiple Images. Proceedings of the AAAI Conference on Artificial Intelligence. 37. 13636-13645. 10.1609/aaai.v37i11.26598.</p>
+<p>Portions of this code are released under the Apache 2.0 License as referenced <a href="https://aws.amazon.com/apache-2-0/">here</a></p>
 <hr>
 </section>
 <section id="author-bio" class="level2">
