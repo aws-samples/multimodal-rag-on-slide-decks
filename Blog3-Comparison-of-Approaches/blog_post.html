@@ -3178,24 +3178,24 @@ Assistant: Here is my response to the question. I will give a direct and precise
 <p><em>Note: Use the below table for guidance and refer to the current pricing on Amazon Bedrock pricing website.</em></p>
 <table class="table">
 <colgroup>
-<col style="width: 17%">
-<col style="width: 14%">
-<col style="width: 21%">
-<col style="width: 9%">
-<col style="width: 7%">
+<col style="width: 15%">
 <col style="width: 11%">
+<col style="width: 26%">
 <col style="width: 8%">
-<col style="width: 9%">
+<col style="width: 8%">
+<col style="width: 13%">
+<col style="width: 8%">
+<col style="width: 7%">
 </colgroup>
 <thead>
 <tr class="header">
 <th></th>
 <th></th>
 <th style="text-align: center;"><strong>Approach 1</strong></th>
-<th style="text-align: center;"></th>
-<th style="text-align: center;"></th>
-<th style="text-align: center;"></th>
-<th style="text-align: center;"></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
 <th></th>
 </tr>
 </thead>
@@ -3203,185 +3203,191 @@ Assistant: Here is my response to the question. I will give a direct and precise
 <tr class="odd">
 <td></td>
 <td></td>
-<td style="text-align: center;"><strong>Input Tokens</strong></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"><strong>Output Tokens</strong></td>
-<td style="text-align: center;"></td>
+<td style="text-align: center;"><strong>Input tokens</strong></td>
+<td></td>
+<td></td>
+<td><strong>Output tokens</strong></td>
+<td></td>
 <td></td>
 </tr>
 <tr class="even">
 <td><strong>Model</strong></td>
 <td><strong>Description</strong></td>
-<td style="text-align: center;"><strong>Price per 1,000 Tokens / Price per Input Image</strong></td>
-<td style="text-align: center;"><strong>Number of Tokens</strong></td>
-<td style="text-align: center;"><strong>Price</strong></td>
-<td style="text-align: center;"><strong>Price per 1,000 Tokens</strong></td>
-<td style="text-align: center;"><strong>Number of Tokens</strong></td>
-<td><strong>Price</strong></td>
-</tr>
-<tr class="odd">
-<td>Amazon Titan Multimodal Embeddings</td>
-<td>Slide/image embedding</td>
-<td style="text-align: center;">$0.000060</td>
-<td style="text-align: center;">1</td>
-<td style="text-align: center;">$0.0000000600</td>
-<td style="text-align: center;">0.000000</td>
-<td style="text-align: center;">0</td>
-<td>$0.0000000000</td>
-</tr>
-<tr class="even">
-<td>Amazon Titan Multimodal Embeddings</td>
-<td>Question embedding</td>
-<td style="text-align: center;">$0.000800</td>
-<td style="text-align: center;">20</td>
-<td style="text-align: center;">$0.0000160000</td>
-<td style="text-align: center;">0.000000</td>
-<td style="text-align: center;">0</td>
-<td>$0.0000000000</td>
-</tr>
-<tr class="odd">
-<td>Anthropic Claude 3 Sonnet</td>
-<td>Final response</td>
-<td style="text-align: center;">$0.003000</td>
-<td style="text-align: center;">700</td>
-<td style="text-align: center;">$0.0021000000</td>
-<td style="text-align: center;">0.015000</td>
-<td style="text-align: center;">8</td>
-<td>$0.0001200000</td>
-</tr>
-<tr class="even">
-<td>Cost per input/output</td>
-<td></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;">$0.0021160600</td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td>$0.0001200000</td>
-</tr>
-<tr class="odd">
-<td><strong>Total cost per question</strong></td>
-<td></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td><strong>$0.0022360600 </strong></td>
-</tr>
-<tr class="even">
-<td></td>
-<td></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td></td>
-</tr>
-<tr class="odd">
-<td></td>
-<td></td>
-<td style="text-align: center;"><strong>Approach 2</strong></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td></td>
-</tr>
-<tr class="even">
-<td></td>
-<td></td>
-<td style="text-align: center;"><strong>Input tokens</strong></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"><strong>Output tokens</strong></td>
-<td style="text-align: center;"></td>
-<td></td>
-</tr>
-<tr class="odd">
-<td>Model</td>
-<td><strong>Description</strong></td>
 <td style="text-align: center;"><strong>Price per 1000 tokens / Price per input image</strong></td>
-<td style="text-align: center;"><strong>Number of Token</strong></td>
-<td style="text-align: center;"><strong>Price</strong></td>
-<td style="text-align: center;"><strong>Price per 1,000 Tokens</strong></td>
-<td style="text-align: center;"><strong>Number of Token</strong></td>
+<td><strong># of tokens</strong></td>
+<td><strong>Price</strong></td>
+<td><strong>Price per 1000 tokens</strong></td>
+<td><strong># of tokens</strong></td>
 <td><strong>Price</strong></td>
 </tr>
-<tr class="even">
-<td>Anthropic Claude 3 Sonnet</td>
-<td>Slide/image description</td>
-<td style="text-align: center;">$0.003000</td>
-<td style="text-align: center;">4523</td>
-<td style="text-align: center;">0.0135690000</td>
-<td style="text-align: center;">0.015000</td>
-<td style="text-align: center;">350</td>
-<td>$0.0052500000</td>
-</tr>
 <tr class="odd">
-<td>Amazon Titan Text Embeddings</td>
-<td>Slide/image description embedding</td>
-<td style="text-align: center;">$0.000100</td>
-<td style="text-align: center;">350</td>
-<td style="text-align: center;">0.0000350000</td>
-<td style="text-align: center;">0.000000</td>
-<td style="text-align: center;">0</td>
-<td>$0.0000000000</td>
+<td>Titan Multimodal Embeddings</td>
+<td>Slide/image embedding</td>
+<td style="text-align: center;">$0.00006</td>
+<td>1</td>
+<td>$0.00000006</td>
+<td>$0.000</td>
+<td>0</td>
+<td>$0.00000</td>
 </tr>
 <tr class="even">
-<td>Amazon Titan Text Embeddings</td>
+<td>Titan Multimodal Embeddings</td>
 <td>Question embedding</td>
-<td style="text-align: center;">$0.000100</td>
-<td style="text-align: center;">20</td>
-<td style="text-align: center;">0.0000020000</td>
-<td style="text-align: center;">0.000000</td>
-<td style="text-align: center;">0</td>
-<td>$0.0000000000</td>
+<td style="text-align: center;">$0.00080</td>
+<td>20</td>
+<td>$0.00001600</td>
+<td>$0.000</td>
+<td>0</td>
+<td>$0.00000</td>
 </tr>
 <tr class="odd">
-<td>Anthropic Claude 3 Sonnet</td>
+<td>Claude 3 Sonnet</td>
 <td>Final response</td>
-<td style="text-align: center;">$0.003000</td>
-<td style="text-align: center;">700</td>
-<td style="text-align: center;">0.0021000000</td>
-<td style="text-align: center;">0.015000</td>
-<td style="text-align: center;">8</td>
-<td>$0.0001200000</td>
+<td style="text-align: center;">$0.00300</td>
+<td>700</td>
+<td>$0.00210000</td>
+<td>$0.015</td>
+<td>8</td>
+<td>$0.00012</td>
 </tr>
 <tr class="even">
 <td>Cost per input/output</td>
 <td></td>
 <td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;">0.0157060000</td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td>$0.0053700000</td>
+<td></td>
+<td>$0.00211606</td>
+<td></td>
+<td></td>
+<td>$0.00012</td>
 </tr>
 <tr class="odd">
 <td><strong>Total cost per question</strong></td>
 <td></td>
 <td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td style="text-align: center;"></td>
-<td><strong>$0.0210760000 </strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td><strong>$0.00224</strong></td>
 </tr>
 </tbody>
 </table>
-<section id="cleanup" class="level4">
-<h4 class="anchored" data-anchor-id="cleanup">Cleanup</h4>
+<table class="table">
+<colgroup>
+<col style="width: 14%">
+<col style="width: 16%">
+<col style="width: 25%">
+<col style="width: 8%">
+<col style="width: 7%">
+<col style="width: 12%">
+<col style="width: 8%">
+<col style="width: 6%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th></th>
+<th style="text-align: center;"><strong>Approach 2</strong></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td></td>
+<td></td>
+<td style="text-align: center;"><strong>Input tokens</strong></td>
+<td></td>
+<td></td>
+<td><strong>Output tokens</strong></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td><strong>Model</strong></td>
+<td><strong>Description</strong></td>
+<td style="text-align: center;"><strong>Price per 1000 tokens / Price per input image</strong></td>
+<td><strong># of tokens</strong></td>
+<td><strong>Price</strong></td>
+<td><strong>Price per 1000 tokens</strong></td>
+<td><strong># of tokens</strong></td>
+<td><strong>Price</strong></td>
+</tr>
+<tr class="odd">
+<td>Claude 3 Sonnet</td>
+<td>Slide/image description</td>
+<td style="text-align: center;">$0.00300</td>
+<td>4523</td>
+<td>$0.01356900</td>
+<td>$0.015</td>
+<td>350</td>
+<td>$0.00525</td>
+</tr>
+<tr class="even">
+<td>Titan Text Embeddings</td>
+<td>Slide/image description embedding</td>
+<td style="text-align: center;">$0.00010</td>
+<td>350</td>
+<td>$0.00003500</td>
+<td>$0.000</td>
+<td>0</td>
+<td>$0.00000</td>
+</tr>
+<tr class="odd">
+<td>Titan Text Embeddings</td>
+<td>Question embedding</td>
+<td style="text-align: center;">$0.00010</td>
+<td>20</td>
+<td>$0.00000200</td>
+<td>$0.000</td>
+<td>0</td>
+<td>$0.00000</td>
+</tr>
+<tr class="even">
+<td>Claude 3 Sonnet</td>
+<td>Final response</td>
+<td style="text-align: center;">$0.00300</td>
+<td>700</td>
+<td>$0.00210000</td>
+<td>$0.015</td>
+<td>8</td>
+<td>$0.00012</td>
+</tr>
+<tr class="odd">
+<td>Cost per input/output</td>
+<td></td>
+<td style="text-align: center;"></td>
+<td></td>
+<td>$0.01570600</td>
+<td></td>
+<td></td>
+<td>$0.00537</td>
+</tr>
+<tr class="even">
+<td><strong>Total cost per question</strong></td>
+<td></td>
+<td style="text-align: center;"></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td><strong>$0.02108</strong></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="cleanup" class="level2">
+<h2 class="anchored" data-anchor-id="cleanup">Cleanup</h2>
 <p>To avoid incurring charges, delete any resources from Parts 1 and 2 of the solution. You can do this by deleting the stacks using the AWS CloudFormation console.</p>
-</section>
-</section>
 </section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
 <p>In Parts 1 &amp; 2 of this series, we explored ways to use the power of multimodal FMs such as Amazon Titan Multimodal Embeddings, Amazon Titan Text Embeddings, and Anthropic Claude 3 Sonnet models. In this post, we wrapped up with a comparison of approaches from accuracy and pricing perspective.</p>
-<p>All the code for the series is available in the GitHub repo. We encourage you to deploy both approaches and explore different Anthropic Claude models available on Amazon Bedrock. You can discover new information and uncover new perspectives using your organization’s slide content. Compare the two approaches to identify a better workflow for your slide decks.</p>
+<p>Code for all parts of the series is available in the GitHub repo. We encourage you to deploy both approaches and explore different Anthropic Claude models available on Amazon Bedrock. You can discover new information and uncover new perspectives using your organization’s slide content with either approach. Compare the two approaches to identify a better workflow for your slide decks.</p>
 <p>With generative artificial intelligence (AI) being a fast-moving space, there are several ways to improve the results and approach the problem. We are exploring performing a hybrid search and adding search filters by extracting entities from the question to improve the results. Part 4 in this series will explore these concepts in detail.</p>
 </section>
 <section id="citations" class="level2">

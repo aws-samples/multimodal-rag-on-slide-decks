@@ -174,27 +174,31 @@ The following table shows the price per question for each approach. We calculate
 
 *Note: Use the below table for guidance and refer to the current pricing on Amazon Bedrock pricing website.*
 
-|                               	   	      |                                   	|                   **Approach   1**                  	|                 	    |                  	|                           	|                     	|                      	|
-|-------------------------------------------|-----------------------------------	|:---------------------------------------------------:	|:--------------------:	|:----------------:	|:-------------------------:	|:-------------------: 	|----------------------	|
-|                               	      	  |                                   	|                   **Input Tokens**                  	|                 	    |                  	|     **Output Tokens**     	|                 	    |                      	|
-| **Model**                     	     	 	  | **Description**                   	| **Price   per 1,000 Tokens / Price per Input Image** 	| **Number of Tokens** 	| **Price**        	| **Price per 1,000 Tokens** 	| **Number of Tokens** 	| **Price**            	|
-| Amazon Titan   Multimodal Embeddings 	 	 	| Slide/image embedding             	| $0.000060                                           	| 1               	    | $0.0000000600    	| 0.000000                  	| 0                   	| $0.0000000000        	|
-| Amazon Titan   Multimodal Embeddings 	 	  | Question embedding                	| $0.000800                                           	| 20              	    | $0.0000160000    	| 0.000000                  	| 0                   	| $0.0000000000        	|
-| Anthropic Claude 3   Sonnet             	| Final response                    	| $0.003000                                           	| 700             	    | $0.0021000000    	| 0.015000                  	| 8                   	| $0.0001200000        	|
-| Cost per   input/output                  	|                                   	|                                                     	|                     	| $0.0021160600    	|                           	|                     	| $0.0001200000        	|
-| **Total cost per   question** 	          |                                   	|                                                     	|                      	|                  	|                           	|                      	| **$0.0022360600   ** 	|
-|                               	          |                                   	|                                                     	|                     	|                  	|                           	|                      	|                      	|
-|                                         	|                                   	|                    **Approach 2**                   	|                      	|                  	|                           	|                      	|                      	|
-|                                          	|                                   	|                   **Input tokens**                  	|                     	|                  	|     **Output tokens**     	|                      	|                      	|
-| Model                                    	| **Description**                   	| **Price   per 1000 tokens / Price per input image** 	| **Number of Token** 	| **Price**        	| **Price per 1,000 Tokens** 	| **Number of Token** 	| **Price**            	|
-| Anthropic Claude 3   Sonnet             	| Slide/image   description         	| $0.003000                                           	| 4523            	    | 0.0135690000     	| 0.015000                  	| 350                  	| $0.0052500000        	|
-| Amazon Titan Text   Embeddings          	| Slide/image description embedding 	| $0.000100                                           	| 350                  	| 0.0000350000     	| 0.000000                  	| 0                    	| $0.0000000000        	|
-| Amazon Titan Text   Embeddings          	| Question embedding                	| $0.000100                                           	| 20                  	| 0.0000020000     	| 0.000000                  	| 0                    	| $0.0000000000        	|
-| Anthropic Claude 3   Sonnet             	| Final response                    	| $0.003000                                           	| 700                 	| 0.0021000000     	| 0.015000                  	| 8                   	| $0.0001200000        	|
-| Cost per   input/output       	          |                                   	|                                                     	|                      	| 0.0157060000     	|                           	|                     	| $0.0053700000        	|
-| **Total cost per   question**             |                                   	|                                                     	|                      	|                  	|                           	|                      	| **$0.0210760000   ** 	|
+|                               	|                       	|                    **Approach 1**                   	|                 	|                	|                           	|                 	|              	|
+|-------------------------------	|-----------------------	|:---------------------------------------------------:	|-----------------	|----------------	|---------------------------	|-----------------	|--------------	|
+|                               	|                       	| **Input tokens**                                    	|                 	|                	| **Output tokens**         	|                 	|              	|
+| **Model**                     	| **Description**       	| **Price   per 1000 tokens / Price per input image** 	| **# of tokens** 	| **Price**      	| **Price per 1000 tokens** 	| **# of tokens** 	| **Price**    	|
+| Titan   Multimodal Embeddings 	| Slide/image embedding 	| $0.00006                                            	| 1               	| $0.00000006    	| $0.000                    	| 0               	| $0.00000     	|
+| Titan   Multimodal Embeddings 	| Question embedding    	| $0.00080                                            	| 20              	| $0.00001600    	| $0.000                    	| 0               	| $0.00000     	|
+| Claude 3   Sonnet             	| Final response        	| $0.00300                                            	| 700             	| $0.00210000    	| $0.015                    	| 8               	| $0.00012     	|
+| Cost per   input/output       	|                       	|                                                     	|                 	| $0.00211606    	|                           	|                 	| $0.00012     	|
+| **Total cost per   question** 	|                       	|                                                     	|                 	|                	|                           	|                 	| **$0.00224** 	|
 
-#### Cleanup
+
+|                               	|                                   	|                    **Approach 2**                   	|                 	|                	|                           	|                 	|              	|
+|-------------------------------	|-----------------------------------	|:---------------------------------------------------:	|-----------------	|----------------	|---------------------------	|-----------------	|--------------	|
+|                               	|                                   	| **Input tokens**                                    	|                 	|                	| **Output tokens**         	|                 	|              	|
+| **Model**                     	| **Description**                   	| **Price   per 1000 tokens / Price per input image** 	| **# of tokens** 	| **Price**      	| **Price per 1000 tokens** 	| **# of tokens** 	| **Price**    	|
+| Claude 3   Sonnet             	| Slide/image   description         	| $0.00300                                            	| 4523            	| $0.01356900    	| $0.015                    	| 350             	| $0.00525     	|
+| Titan Text   Embeddings       	| Slide/image description embedding 	| $0.00010                                            	| 350             	| $0.00003500    	| $0.000                    	| 0               	| $0.00000     	|
+| Titan Text   Embeddings       	| Question embedding                	| $0.00010                                            	| 20              	| $0.00000200    	| $0.000                    	| 0               	| $0.00000     	|
+| Claude 3   Sonnet             	| Final response                    	| $0.00300                                            	| 700             	| $0.00210000    	| $0.015                    	| 8               	| $0.00012     	|
+| Cost per   input/output       	|                                   	|                                                     	|                 	| $0.01570600    	|                           	|                 	| $0.00537     	|
+| **Total cost per   question** 	|                                   	|                                                     	|                 	|                	|                           	|                 	| **$0.02108** 	|
+
+
+
+## Cleanup
 
 To avoid incurring charges, delete any resources from Parts 1 and 2 of the solution. You can do this by deleting the stacks using the AWS CloudFormation console.
 
@@ -202,7 +206,7 @@ To avoid incurring charges, delete any resources from Parts 1 and 2 of the solut
 
 In Parts 1 & 2 of this series, we explored ways to use the power of multimodal FMs such as Amazon Titan Multimodal Embeddings, Amazon Titan Text Embeddings, and Anthropic Claude 3 Sonnet models. In this post, we wrapped up with a comparison of approaches from accuracy and pricing perspective.
 
-All the code for the series is available in the GitHub repo. We encourage you to deploy both approaches and explore different Anthropic Claude models available on Amazon Bedrock. You can discover new information and uncover new perspectives using your organization’s slide content. Compare the two approaches to identify a better workflow for your slide decks.
+Code for all parts of the series is available in the GitHub repo. We encourage you to deploy both approaches and explore different Anthropic Claude models available on Amazon Bedrock. You can discover new information and uncover new perspectives using your organization’s slide content with either approach. Compare the two approaches to identify a better workflow for your slide decks.
 
 With generative artificial intelligence (AI) being a fast-moving space, there are several ways to improve the results and approach the problem. We are exploring performing a hybrid search and adding search filters by extracting entities from the question to improve the results. Part 4 in this series will explore these concepts in detail.
 
