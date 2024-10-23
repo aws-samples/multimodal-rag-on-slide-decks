@@ -3073,7 +3073,7 @@ vertical-align: -.125em;
 <figcaption>Process flow</figcaption>
 </figure>
 </div>
-<p>SlideVQA is a large question answering dataset comprising thousands of slide decks. We selected 100 random questions to create a sample dataset to test solutions from Part 1 and Part 2.</p>
+<p>We selected 100 random questions from SlideVQA to create a sample dataset to test solutions from Part 1 and Part 2.</p>
 <p>The responses to the questions in the sample dataset are as concise as possible, as shown in the following example:</p>
 <pre><code>&quot;question&quot;: &quot;What is the process by which the breaking of hydrogen bonds allows water to change from the liquid phase into the gaseous phase which has reached equilibrium with the liquid surface said to have done?&quot;
 
@@ -3125,7 +3125,7 @@ If the image does not contain the answer, or if image does not directly answer t
 
 Assistant: Here is my response to the question. I will give a direct and precise answer to the question if I find it and if not, I will say &quot;no answer&quot;:</code></pre>
 <p>We used Anthropic Claude 3 Sonnet instead of LLaVA 1.5-7b as mentioned in the solution for Part 1. The approach remains the same, “embed first, infer later,” but the model that compiles the final response is changed for simplicity and comparability between approaches.</p>
-<p>A response for each question in the dataset is <a href="https://github.com/aws-samples/multimodal-rag-on-slide-decks/blob/main/Blog3-Comparison-of-Approaches/notebooks/responses-appr1.json">recorded</a> and compared to the ground truth provided by SlideVQA.</p>
+<p>A response for each question in the dataset is <a href="https://github.com/aws-samples/multimodal-rag-on-slide-decks/blob/main/Blog3-Comparison-of-Approaches/notebooks/responses-appr1.json">recorded</a> in json format and compared to the ground truth provided by SlideVQA.</p>
 <p>This approach retrieved a response for 78% of the questions on a dataset of 100 questions, achieving a 50% accuracy on the final responses.</p>
 </section>
 <section id="approach-2-infer-first-embed-later" class="level4">
@@ -3162,6 +3162,7 @@ If the summary does not contain the answer, or if summary does not directly answ
 
 Assistant: Here is my response to the question. I will give a direct and precise answer to the question if I find it and if not, I will say &quot;no answer&quot;:</code></pre>
 <p>A response for each question in the dataset is <a href="https://github.com/aws-samples/multimodal-rag-on-slide-decks/blob/main/Blog3-Comparison-of-Approaches/notebooks/responses-appr2.json">recorded</a> and compared to the ground truth provided by SlideVQA.</p>
+<p>The response for each question in the dataset is <a href="https://github.com/aws-samples/multimodal-rag-on-slide-decks/blob/main/Blog3-Comparison-of-Approaches/notebooks/responses-appr2.json">recorded</a> in json format for ease of comparison.</p>
 <p>With this approach, we received 44% accuracy on final responses with 75% of the questions retrieving a response out of the 100 questions in the sample dataset.</p>
 </section>
 <section id="analysis-of-results" class="level4">
@@ -3174,6 +3175,7 @@ Assistant: Here is my response to the question. I will give a direct and precise
 <h3 class="anchored" data-anchor-id="pricing">Pricing</h3>
 <p>Pricing is dependent on the modality, provider, and model used. For more details, refer to <a href="https://aws.amazon.com/bedrock/pricing/">Amazon Bedrock pricing</a>. We use the On-Demand and Batch pricing mode in our analysis, which allow you to use FMs on a pay-as-you-go basis without having to make any time-based term commitments. For text-generation models, you are charged for every input token processed and every output token generated. For embeddings models, you are charged for every input token processed.</p>
 <p>The following table shows the price per question for each approach. We calculated the average number of input and output tokens based on our sample dataset for the <code>us-east-1</code> AWS Region; pricing may vary based on your datasets and Region used.</p>
+<p><em>Note: Use the below table for guidance and refer to the current pricing on Amazon Bedrock pricing website.</em></p>
 <table class="table">
 <colgroup>
 <col style="width: 17%">
@@ -3378,7 +3380,8 @@ Assistant: Here is my response to the question. I will give a direct and precise
 </section>
 <section id="conclusion" class="level2">
 <h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
-<p>In this series, we explored ways to use the power of multimodal FMs such as Amazon Titan Multimodal Embeddings, Amazon Titan Text Embeddings, and Anthropic Claude 3 Sonnet models to discover new information and uncover new perspectives on content in slide decks. We encourage you to explore different Anthropic Claude models available on Amazon Bedrock with your organization’s slide content to uncover new perspectives. You can compare the two approaches to identify a better workflow for your slide decks.</p>
+<p>In Parts 1 &amp; 2 of this series, we explored ways to use the power of multimodal FMs such as Amazon Titan Multimodal Embeddings, Amazon Titan Text Embeddings, and Anthropic Claude 3 Sonnet models. In this post, we wrapped up with a comparison of approaches from accuracy and pricing perspective.</p>
+<p>All the code for the series is available in the GitHub repo. We encourage you to deploy both approaches and explore different Anthropic Claude models available on Amazon Bedrock. You can discover new information and uncover new perspectives using your organization’s slide content. Compare the two approaches to identify a better workflow for your slide decks.</p>
 <p>With generative artificial intelligence (AI) being a fast-moving space, there are several ways to improve the results and approach the problem. We are exploring performing a hybrid search and adding search filters by extracting entities from the question to improve the results. Part 4 in this series will explore these concepts in detail.</p>
 </section>
 <section id="citations" class="level2">
