@@ -33,10 +33,11 @@ model and stored in a vector database. Then we used the Anthropic Claude
 relevant text description retrieved from the vector database.
 
 In this post, we evaluate the results from both approaches using ground
-truth provided by [SlideVQA](https://github.com/nttmdlab-nlp/SlideVQA),
-an open source visual question answering dataset. You can test both
-approches and evaluate the results to find the best fit for your
-datasets. The code for this series is available in the [GitHub
+truth provided by
+[SlideVQA](https://github.com/nttmdlab-nlp/SlideVQA)[^1], an open source
+visual question answering dataset. You can test both approches and
+evaluate the results to find the best fit for your datasets. The code
+for this series is available in the [GitHub
 repo](https://github.com/aws-samples/multimodal-rag-on-slide-decks/tree/main).
 
 ## Comparison of approaches
@@ -301,13 +302,7 @@ We are exploring performing a hybrid search and adding search filters by
 extracting entities from the question to improve the results. Part 4 in
 this series will explore these concepts in detail.
 
-## Citations
-
-Tanaka, Ryota & Nishida, Kyosuke & Nishida, Kosuke & Hasegawa, Taku &
-Saito, Itsumi & Saito, Kuniko. (2023). SlideVQA: A Dataset for Document
-Visual Question Answering on Multiple Images. Proceedings of the AAAI
-Conference on Artificial Intelligence. 37. 13636-13645.
-10.1609/aaai.v37i11.26598.
+------------------------------------------------------------------------
 
 Portions of this code are released under the [Apache 2.0
 License](https://aws.amazon.com/apache-2-0/)
@@ -355,3 +350,9 @@ Services supporting strategic customers based out of Dallas, Texas. She
 also has previous experience working with large enterprise partners at
 AWS, where she worked as a Partner Success Solutions Architect for
 digital-centered customers.
+
+[^1]: Tanaka, Ryota & Nishida, Kyosuke & Nishida, Kosuke & Hasegawa,
+    Taku & Saito, Itsumi & Saito, Kuniko. (2023). SlideVQA: A Dataset
+    for Document Visual Question Answering on Multiple Images.
+    Proceedings of the AAAI Conference on Artificial Intelligence. 37.
+    13636-13645. 10.1609/aaai.v37i11.26598.

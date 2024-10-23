@@ -29,7 +29,9 @@ Language-and-Vision Assistant (LLaVA 1.5-7b)](https://llava-vl.github.io/) model
 In [Part 2](https://aws.amazon.com/blogs/machine-learning/talk-to-your-slide-deck-using-multimodal-foundation-models-hosted-on-amazon-bedrock-and-amazon-sagemaker-part-2/), we demonstrated a different approach: "infer first, embed later". We used [Anthropic Claude 3 Sonnet on Amazon Bedrock](https://aws.amazon.com/bedrock/claude/)
 model to generate text descriptions for each slide in the slide deck. These descriptions are then converted into text embeddings using the [Amazon Titan Text Embeddings](https://docs.aws.amazon.com/bedrock/latest/userguide/titan-embedding-models.html) model and stored in a vector database. Then we used the Anthropic Claude 3 Sonnet model to generate answers to user questions based on the most relevant text description retrieved from the vector database.
 
-In this post, we evaluate the results from both approaches using ground truth provided by [SlideVQA](https://github.com/nttmdlab-nlp/SlideVQA), an open source visual question answering dataset. You can test both approches and evaluate the results to find the best fit for your datasets. The code for this series is available in the [GitHub repo](https://github.com/aws-samples/multimodal-rag-on-slide-decks/tree/main).
+In this post, we evaluate the results from both approaches using ground truth provided by [SlideVQA](https://github.com/nttmdlab-nlp/SlideVQA)[^1], an open source visual question answering dataset. You can test both approches and evaluate the results to find the best fit for your datasets. The code for this series is available in the [GitHub repo](https://github.com/aws-samples/multimodal-rag-on-slide-decks/tree/main).
+
+[^1]: Tanaka, Ryota & Nishida, Kyosuke & Nishida, Kosuke & Hasegawa, Taku & Saito, Itsumi & Saito, Kuniko. (2023). SlideVQA: A Dataset for Document Visual Question Answering on Multiple Images. Proceedings of the AAAI Conference on Artificial Intelligence. 37. 13636-13645. 10.1609/aaai.v37i11.26598.
 
 ## Comparison of approaches
 
@@ -210,9 +212,8 @@ Code for all parts of the series is available in the GitHub repo. We encourage y
 
 With generative artificial intelligence (AI) being a fast-moving space, there are several ways to improve the results and approach the problem. We are exploring performing a hybrid search and adding search filters by extracting entities from the question to improve the results. Part 4 in this series will explore these concepts in detail.
 
-## Citations
 
-Tanaka, Ryota & Nishida, Kyosuke & Nishida, Kosuke & Hasegawa, Taku & Saito, Itsumi & Saito, Kuniko. (2023). SlideVQA: A Dataset for Document Visual Question Answering on Multiple Images. Proceedings of the AAAI Conference on Artificial Intelligence. 37. 13636-13645. 10.1609/aaai.v37i11.26598. 
+------------------------------------------------------------------------
 
 Portions of this code are released under the [Apache 2.0 License](https://aws.amazon.com/apache-2-0/)
 
