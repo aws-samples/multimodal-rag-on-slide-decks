@@ -113,7 +113,7 @@ inference_info:
 # subjective evaluations against the responses from each index 
 model_info:
   inference_model_info:
-    model_id: anthropic.claude-3-sonnet-20240229-v1:0
+    model_id: anthropic.claude-3-5-sonnet-20241022-v2:0
     # this is the total input and output prices per 1k tokens that can be found on the 
     # public pricing page here: https://aws.amazon.com/bedrock/pricing/?refid=0eaabb80-ee46-4e73-94ae-368ffb759b62
     input_token_price: 0.00300
@@ -134,7 +134,7 @@ model_info:
   # for the multimodal use case (image only responses/text only responses/or responses
   # from both of the indexes combined)
   final_analysis_llm_summarizer:
-    model_id: anthropic.claude-3-sonnet-20240229-v1:0
+    model_id: anthropic.claude-3-5-sonnet-20241022-v2:0
 
 # these are the inference parameters used by the bedrock model while generating 
 # inferences during the process of the RAG workflow and getting evaluations from the LLM that acts as a judge
@@ -146,6 +146,7 @@ other_inference_and_eval_metrics:
   rouge_metric_selection: 'rougeL' # can be rouge-1, rouge-2, rouge-w, rouge-s, etc
   # This is the 'k' parameter. Increase or decrease it for your use case
   k_count_retrieval: 4
+  summarize_all_hits: True
 
 # enter the file - enter information in here if you are bringing in a curated dataset of questions to test against
 eval_qna_dataset_info:
@@ -157,3 +158,109 @@ eval_qna_dataset_info:
   question_key: Query
   target_response_key: Response
   updated_eval_file: updated_eval_dataset.csv
+  
+# Enter your custom metadata extraction schema format below
+# the custom metadata extraction 
+custom_metadata_extraction_format: |
+  {
+  "properties": {
+    "employee_type": {
+      "type": "string",
+      "enum": [
+        "full_time",
+        "part_time",
+        "contractor",
+        "intern",
+        "temporary"
+      ]
+    },
+    "employee_id": {
+      "type": "string",
+      "description": "Unique identifier for the employee"
+    },
+    "start_date": {
+      "type": "string",
+      "description": "Date when employment began"
+    },
+    "personal_info": {
+      "type": "object",
+      "properties": {
+        "full_name": {"type": "string"},
+        "date_of_birth": {"type": "string"},
+        "contact_details": {
+          "type": "object",
+          "properties": {
+            "primary_address": {"type": "string"},
+            "email": {"type": "string"},
+            "phone": {"type": "string"},
+            "emergency_contact": {
+              "type": "object",
+              "properties": {
+                "name": {"type": "string"},
+                "relationship": {"type": "string"},
+                "phone": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "employment_details": {
+      "type": "object",
+      "properties": {
+        "department": {"type": "string"},
+        "position": {"type": "string"},
+        "reporting_manager": {"type": "string"},
+        "salary_info": {
+          "type": "object",
+          "properties": {
+            "base_salary": {"type": "number"},
+            "pay_frequency": {
+              "type": "string",
+              "enum": ["weekly", "bi_weekly", "monthly"]
+            }
+          }
+        }
+      }
+    },
+    "benefits": {
+      "type": "object",
+      "properties": {
+        "health_insurance": {"type": "boolean"},
+        "retirement_plan": {"type": "boolean"},
+        "vacation_days": {"type": "number"},
+        "sick_leave": {"type": "number"}
+      }
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "document_type": {"type": "string"},
+          "document_name": {"type": "string"},
+          "upload_date": {"type": "string"},
+          "expiry_date": {"type": "string"}
+        }
+      }
+    },
+    "performance_reviews": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "review_date": {"type": "string"},
+          "reviewer": {"type": "string"},
+          "rating": {"type": "number"},
+          "comments": {"type": "string"}
+        }
+      }
+    }
+  },
+  "required": [
+    "employee_type",
+    "employee_id",
+    "start_date",
+    "personal_info",
+    "employment_details"
+  ]
