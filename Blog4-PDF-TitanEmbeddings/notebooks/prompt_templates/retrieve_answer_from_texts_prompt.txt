@@ -1,27 +1,44 @@
-Human: Your role is to give the answer to the question in the <question></question> tags. If the text description in the <text_desc></text_desc> tags does not contain the answer to the question, then respond with two words only - "not found".
+Your role is to give the answer to the question in the <question></question> tags. If the text description in the <text_desc></text_desc> tags contains any information that could help answer the question, use that information to provide a response.
+
+First, check if the text contains any information that could help determine the answer, even if it's not directly stated.
 
 Refer to the text_desc and question below:
 
-<text_desc>
-{context}
-</text_desc>
-<question>
-{question}
-</question>
+<text_desc> {context} </text_desc>
 
-If the answer to the question is not in the text desctipion, then respond with two words only: "not found"
+<question> {question} </question>
 
-Follow the instructions below in the <instructions></instructions> tags:
+<schema> {schema} </schema>
 
-<instructions>
-1. Search for the direct answer to the user question in the text.
+If there is ANY information in the text that can help answer the question (such as relevant data, facts, or information that could be used to calculate or determine an answer), use that information to provide a response in the form of extracted metadata according to the schema provided.
 
-2. If the context does not provide a direct answer to the user question, do not say anything. Just say "not found". Do not add statements like "After carefully examining the context, I could not find a direct... and so on" Just say "not found"
+Your response should be in this format if an answer is found:
 
-3. Do not add any tags in yor answer
+<output_format> { [JSON formatted metadata according to schema] } </output_format>
 
-4. scan for the direct answer to the user question. If there is more than one direct answer, give everything that seems like a valid answer to the question in your response.
+Follow these instructions:
+
+<instructions> 
+
+1. Search for any information in the text that could help answer the question, whether direct or indirect.
+For metadata extraction:
+
+2. Provide all required fields from the schema
+
+3. Use "not provided" for optional fields where no information is found
+
+4. Format metadata in clean JSON without additional tags
+
+5. Extract metadata only if an answer is found
+
+6. If there are multiple pieces of relevant information that could help answer the question, include all of them in your response.
+
+7. Double check the text for any relevant information before responding with "not found"
+
+8. If the text does not contain ANY information that could help answer the question, respond only with "not found". Do not add statements like "After carefully examining the context, I could not find... and so on"
+
+Do not add any tags in your answer
+
 </instructions>
 
-
-Assistant:
+If the text contains absolutely no information that could help answer the question, your response should only be "not found" without any additional explanation.
